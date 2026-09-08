@@ -141,6 +141,25 @@ target_include_directories(cq_coefficients_test PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}/cq_test_modules)
 add_test(NAME cq_coefficients_unit COMMAND $<TARGET_FILE:cq_coefficients_test>)
 
+add_executable(fq8_withers_benchmark_test
+  common.f90
+  withers_tables.f90
+  anelastic_fq8_model.f90
+  ../tests/fq8_withers_benchmark_test.f90)
+set_target_properties(fq8_withers_benchmark_test PROPERTIES
+  Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fq8_bench_modules)
+target_include_directories(fq8_withers_benchmark_test PRIVATE
+  ${CMAKE_CURRENT_BINARY_DIR}/fq8_bench_modules)
+add_test(NAME fq8_withers_benchmark_unit
+  COMMAND $<TARGET_FILE:fq8_withers_benchmark_test>)
+
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_FOUND)
+  add_test(NAME fk_reference_selftest
+    COMMAND ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/../python/fk_reference.py --selftest)
+endif()
+
 # Intel MPI's mpirun wrapper supplies its runtime-library environment, while
 # the sibling mpiexec binary on this cluster does not.
 get_filename_component(MPIEXEC_DIRECTORY ${MPIEXEC_EXECUTABLE} DIRECTORY)
@@ -282,6 +301,30 @@ add_test(NAME fq8_coarse_grain_0_dynamic_decomposition
     -D MPIEXEC=${WQL3D_MPI_RUNNER}
     -D EXE=$<TARGET_FILE:waveqlab3d>
     -D INPUT=${CMAKE_CURRENT_SOURCE_DIR}/../inputfile/test_anelastic_fQ8_full.in
+    -D STATE_LABEL=fQ8
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/run_q8_dynamic_regression.cmake)
+
+add_test(NAME fq8_benchmark_elastic
+  COMMAND ${CMAKE_COMMAND}
+    -D MPIEXEC=${WQL3D_MPI_RUNNER}
+    -D EXE=$<TARGET_FILE:waveqlab3d>
+    -D INPUT=${CMAKE_CURRENT_SOURCE_DIR}/../inputfile/test_fq8_benchmark_elastic.in
+    -D STATE_LABEL=fQ8
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/run_q8_dynamic_regression.cmake)
+
+add_test(NAME fq8_benchmark_constant_q
+  COMMAND ${CMAKE_COMMAND}
+    -D MPIEXEC=${WQL3D_MPI_RUNNER}
+    -D EXE=$<TARGET_FILE:waveqlab3d>
+    -D INPUT=${CMAKE_CURRENT_SOURCE_DIR}/../inputfile/test_fq8_benchmark_constant_q.in
+    -D STATE_LABEL=fQ8
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/run_q8_dynamic_regression.cmake)
+
+add_test(NAME fq8_benchmark_powerlaw
+  COMMAND ${CMAKE_COMMAND}
+    -D MPIEXEC=${WQL3D_MPI_RUNNER}
+    -D EXE=$<TARGET_FILE:waveqlab3d>
+    -D INPUT=${CMAKE_CURRENT_SOURCE_DIR}/../inputfile/test_fq8_benchmark_powerlaw.in
     -D STATE_LABEL=fQ8
     -P ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/run_q8_dynamic_regression.cmake)
 
