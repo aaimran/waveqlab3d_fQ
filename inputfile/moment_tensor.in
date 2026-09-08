@@ -1,0 +1,98 @@
+kd3d input file: medium version of moment tensor
+
+&problem_list
+ name = 'data/tensor', 
+ response = 'elastic', 
+ nblocks = 2,
+ t_final = 10d0, 
+ CFL = 0.5d0,
+ coupling = 'locked', 
+ type_of_mesh = 'cartesian', 
+ w_stride = 1, 
+ w_fault = F /
+
+&block_list
+btp(1)%nqrs = 51, 201, 201,
+btp(1)%aqrs = -10d0, -10d0, -10d0,
+btp(1)%bqrs = -5d0,   10d0,  10d0,
+btp(1)%rho_s_p = 2.670156649190086d0, 3.464d0, 5.999823997418591d0,
+btp(1)%lqrs = 1, 1, 1,
+btp(1)%rqrs = 0, 1, 1,
+btp(1)%pml_lqrs = T, T, T,
+btp(1)%pml_rqrs = F, T, T,
+btp(1)%npml = 6,
+
+
+btp(2)%nqrs = 151, 201, 201,
+btp(2)%aqrs = -5d0, -10d0, -10d0,
+btp(2)%bqrs = 10d0, 10d0, 10d0,
+btp(2)%rho_s_p = 2.670156649190086d0, 3.464d0, 5.999823997418591d0,
+btp(2)%lqrs = 0, 1, 1,
+btp(2)%rqrs = 1, 1, 1,
+btp(2)%pml_lqrs = F, T, T,
+btp(2)%pml_rqrs = T, T, T,
+btp(2)%npml = 6 /
+
+&moment_list            
+ use_moment_tensor = T,
+ order = 4 /
+
+!---begin:tensor_listU---
+!---end:tensor_listU---
+
+!---begin:tensor_listV---
+'gaussian' 21d0 0.19d0 0d0 0d0 0d0 0d0 0d0 -0.155d0 21d0 2d0 20d0 50
+!---end:tensor_listV---  
+
+
+&mms_list
+ use_mms = F /
+
+&output_list
+ output_exact_moment = F,
+ output_seismograms = T,
+ output_fault_topo = F, 
+ output_fields_block1 = F,
+ output_fields_block2 = F,
+ stride_fields = 1 /
+
+!---begin:station_listU---
+-1d0    5d0  10d0
+-5d0    5d0  10d0
+-10d0   5d0  10d0 
+-1d0    10d0  5d0
+-5d0    10d0  5d0
+-10d0   10d0  5d0 
+-1d0    15d0  10d0
+-5d0    15d0  10d0
+-10d0   15d0  10d0 
+-1d0    10d0  10d0
+-5d0    10d0  10d0
+-10d0   10d0  10d0
+-1d0    10d0  15d0
+-5d0    10d0  15d0
+-10d0   10d0  15d0
+!---end:station_listU---
+
+!---begin:station_listV---
+9d0   10d0 10d0
+5d0   10d0 10d0
+1d0   10d0 10d0
+11d0  10d0 10d0
+15d0  10d0 10d0
+19d0  10d0 10d0
+10d0   9d0 10d0
+10d0   5d0 10d0
+10d0   1d0 10d0
+10d0  11d0 10d0
+10d0  15d0 10d0
+10d0  19d0 10d0
+10d0  10d0  9d0
+10d0  10d0  5d0
+10d0  10d0  1d0
+10d0  10d0 11d0
+10d0  10d0 15d0
+10d0  10d0 19d0
+!---end:station_listV---
+
+

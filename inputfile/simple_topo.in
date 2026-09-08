@@ -1,0 +1,107 @@
+! waveqlab3d input file: test problem for mms on cartesian grid with friction
+
+&problem_list
+ name = 'data/topo_flat_100m', 
+ response = 'elastic',
+ problem = 'TPV5'
+ nblocks = 2,
+ t_final = 4d0, 
+ CFL = 0.5d0,
+ coupling = 'locked', 
+ type_of_mesh = 'curvilinear', !'cartesian',
+ material_source='hard-coded',	
+ interpol = F,
+ use_topography = T,
+ w_stride = 2, 
+ w_fault = F /
+
+&block_list
+btp(1)%nqrs = 101, 201, 201,
+btp(1)%aqrs = -10d0, -10d0, -10d0,
+btp(1)%bqrs =  0d0, 10d0,  10d,
+btp(1)%rho_s_p = 2.67d0, 3.464d0, 6d0,
+btp(1)%lqrs = 1, 2, 1,
+btp(1)%rqrs = 0, 1, 1,
+btp(1)%pml_lqrs = T, F, T,
+btp(1)%pml_rqrs = F, T, T,
+btp(1)%npml = 6,
+btp(1)%lc = 1d0,
+btp(1)%rc = 0d0,
+btp(1)%profile_type= 'hardcoded', !'read_from_memomry_fractal',
+btp(1)%topography_type = 'hardcoded', !'read_topo_from_memory',
+btp(1)%faultsize = 211, 201,
+btp(1)%topography_path= '../inputfile/block1_alpha_0_01_101by201_1km.dat',
+btp(1)%profile_path= '../inputfile/seed2239_alpha_0_01_211by201_1km.dat',
+btp(1)%material_path(1) = '/home/kduru/Material/OK_homog_lambda_B1',
+btp(1)%material_path(2) = '/home/kduru/Material/OK_homog_mu_B1', 
+btp(1)%material_path(3) = '/home/kduru/Material/OK_homog_rho_B1',
+
+btp(2)%nqrs = 101, 201, 201,
+btp(2)%aqrs =  0d0, -10d0, -10d0,
+btp(2)%bqrs =  10d0, 10d0,  10d0,
+btp(2)%rho_s_p = 2.67d0, 3.464d0, 6d0,
+btp(2)%lqrs = 0, 2, 1,
+btp(2)%rqrs = 1, 1, 1,
+btp(2)%pml_lqrs = F, F, T,
+btp(2)%pml_rqrs = T, T, T,
+btp(2)%npml = 6,
+btp(2)%lc = 0d0,
+btp(2)%rc = 1d0,
+btp(2)%profile_type= 'read_from_memomry_fractal',
+btp(2)%topography_type = 'read_topo_from_memory',
+btp(2)%faultsize = 211, 201,
+btp(2)%topography_path= '../inputfile/block2_alpha_0_01_101by201_1km.dat'
+btp(2)%profile_path= '../inputfile/seed2239_alpha_0_01_211by201_1km.dat',
+btp(2)%material_path(1) = '/home/kduru/Material/OK_homog_lambda_B2',
+btp(2)%material_path(2) = '/home/kduru/Material/OK_homog_mu_B2', 
+btp(2)%material_path(3) = '/home/kduru/Material/OK_homog_rho_B2'/
+
+&moment_list            
+ use_moment_tensor = T,
+ order = 4 /
+
+!---begin:tensor_listU---
+'LOH_discontinuity' 0.1d0 0d0 0d0 0d0 0d0 0d0 0d0 1d3 -5d0 0d0 0d0 0
+!---end:tensor_listU---
+
+!---begin:tensor_listV---
+'LOH_discontinuity' 0.1d0 0d0 0d0 0d0 0d0 0d0 0d0 1d3 -5d0 0d0 0d0 0
+!---end:tensor_listV---  
+
+
+&mms_list
+ use_mms = F /
+
+&output_list
+ output_exact_moment = F,
+ output_seismograms = T,
+ output_fault_topo = F, 
+ output_fields_block1 = F,
+ output_fields_block2 = F,
+ stride_fields = 1 /
+
+!---begin:station_listU---
+ -5d0 -10d0 0d0
+ -5d0 -10d0 2d0
+ -2.5d0 -10d0 2d0 
+ -2.5d0 -10d0 -2d0
+ -7.5d0 -10d0 2d0
+ -7.5d0 -10d0 -2d0
+!---end:station_listU---
+
+!---begin:station_listV---
+ 5d0 -10d0 0d0
+ 5d0 -10d0 2d0
+ 2.5d0 -10d0 -2d0 
+ 2.5d0 -10d0 2d0
+ 7.5d0 -10d0 2d0
+ 7.5d0 -10d0 -2d0
+!---end:station_listV---
+
+
+
+
+
+
+
+

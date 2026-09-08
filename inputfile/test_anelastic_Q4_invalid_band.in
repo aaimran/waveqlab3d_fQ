@@ -1,0 +1,13 @@
+waveqlab3d input file: invalid frequency band anelastic-Q4 regression
+&problem_list
+ name='invalid', problem='default', response='anelastic-Q4', nblocks=1,
+ t_final=0d0, CFL=0.25d0, fd_type='upwind', order=4, w_stride=1
+/
+&block_list
+ btp(1)%nqrs=41,41,41, btp(1)%aqrs=-1d0,-1d0,-1d0, btp(1)%bqrs=1d0,1d0,1d0,
+ btp(1)%rho_s_p=2.7d0,3.464d0,6d0, btp(1)%lqrs=1,1,1, btp(1)%rqrs=1,1,1,
+ btp(1)%pml_lqrs=F,F,F, btp(1)%pml_rqrs=F,F,F, btp(1)%npml=0
+/
+&anelastic_Q4_list
+ Qs0=50d0, Qp0=50d0, fmin=20d0, fmax=0.05d0
+/

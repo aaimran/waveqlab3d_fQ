@@ -1,0 +1,54 @@
+kd3d input file: medium version of TPV101
+
+&problem_list
+ name = 'data/tpv101_fractal', problem = 'TPV101', t_final = 12d0, CFL = 0.25d0,
+ coupling = 'rate-and-state_friction', type_of_mesh = 'curvilinear', w_stride = 1 /
+
+&discretization_list
+ mx1 = 201, my1 = 201, mz1 = 401,  ! number of grid points in block 1
+ mx2 = 201, my2 = 201, mz2 = 401 / ! number of grid points in block 2
+
+&boundary_list
+ Nblocks = 2,
+ Lx1 = 1, Ly1 = 2, Lz1 = 1,
+ Rx1 = 0, Ry1 = 1, Rz1 = 1,
+ Lx2 = 0, Ly2 = 2, Lz2 = 1,
+ Rx2 = 1, Ry2 = 1, Rz2 = 1 /
+
+&geometry_list
+ a1x = -20d0,  a1y = 0d0,  a1z = -20d0,
+ b1x =   0d0,  b1y = 20d0, b1z =  20d0,
+ a2x =   0d0,  a2y = 0d0,  a2z = -20d0,
+ b2x =  20d0,  b2y = 20d0, b2z =  20d0,
+profile_path='/data/dunham/kduru/fault_200by400_20ppWl_seed200.dat',
+profile_type='read_from_memomry_fractal'/
+
+&material_list
+ rho1 = 2.67d0, c_s1 = 3.464d0, c_p1 = 6d0,
+ rho2 = 2.67d0, c_s2 = 3.464d0, c_p2 = 6d0 /
+
+&moment_tensor_list
+ use_moment_tensor = F, x = 3d0, y = 0d0, z = 0d0,
+ M0 = 370.3703703703703d0, T = 0.1d0, sigma = 0.2d0 /
+
+
+&mms_list
+ use_mms = F /
+
+&output_list
+ output_seismograms = T,	
+ output_fields_block1 =	F, output_fields_block2 = F, stride_fields = 1 /
+
+!---begin:station_listU---
+-3d0 0d0 -12d0
+-3d0 0d0 12d0
+-3d0 7.5d0 -12d0
+-3d0 7.5d0 12d0
+!---end:station_listU---
+
+!---begin:station_listV---
+3d0 0d0 -12d0
+3d0 0d0 12d0
+3d0 7.5d0 -12d0
+3d0 7.5d0 12d0
+!---end:station_listV---

@@ -1,0 +1,41 @@
+waveqlab3d input file: nonzero-source anelastic-Q4 dynamics regression
+
+&problem_list
+ name = 'data/test_anelastic_Q4_dynamic', problem = 'default',
+ response = 'anelastic-Q4', nblocks = 1, t_final = 0.02d0, CFL = 0.25d0,
+ coupling = 'locked', fd_type = 'upwind', order = 4,
+ mesh_source = 'compute', type_of_mesh = 'cartesian', material_source = 'hardcode',
+ interpol = F, w_stride = 1, w_fault = F, use_topography = F,
+ topo = 1d0, mollify_source = F
+/
+
+&block_list
+ btp(1)%nqrs = 41, 41, 41,
+ btp(1)%aqrs = -2d0, -2d0, -2d0, btp(1)%bqrs = 2d0, 2d0, 2d0,
+ btp(1)%rho_s_p = 2.7d0, 3.464d0, 6d0,
+ btp(1)%lqrs = 1, 1, 1, btp(1)%rqrs = 1, 1, 1,
+ btp(1)%pml_lqrs = F, F, F, btp(1)%pml_rqrs = F, F, F,
+ btp(1)%npml = 0
+/
+
+&anelastic_Q4_list
+ Qs0 = 100d0, Qp0 = 50d0, fref = 1d0
+/
+
+&moment_list
+ use_moment_tensor = T, order = 4
+/
+
+!---begin:tensor_listU---
+'Cos-Bell' 0d0 0.05d0 0d0 0d0 0d0 0d0 -10d0 0d0 0d0 0d0 0d0 0
+!---end:tensor_listU---
+
+&mms_list
+ use_mms = F
+/
+
+&output_list
+ output_exact_moment = F, output_seismograms = F, output_station_info = F,
+ output_fault_topo = F, output_fields_block1 = F, output_fields_block2 = F,
+ stride_fields = 1
+/

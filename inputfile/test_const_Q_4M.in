@@ -1,0 +1,63 @@
+&domain_list
+    n_q = 25
+    n_r = 25
+    n_s = 25
+    aq = -12.5
+    bq =  12.5
+    ar = -12.5
+    br =  12.5
+    as = -12.5
+    bs =  12.5
+/
+
+&parameters_list
+    t_end = 0.5
+    rho_s_p(1) = 1.0       ! lambda
+    rho_s_p(2) = 1.0       ! V_s
+    rho_s_p(3) = 2.67      ! density
+    response   = 'constant-Q-4M'
+    problem    = 'default'
+    physics    = 'elastic'
+/
+
+&constant_Q_4M_list
+    c           = 50.0
+    fmin        = 0.5
+    fmax        = 10.0
+    target_Q    = 30.0
+    weight_method = 'nnls'
+    fref        = 1.0
+/
+
+&PML_list
+    n_pml = 0
+/
+
+&interface_list
+    n_interface = 0
+/
+
+&couplingforcing_list
+    n_coupling = 0
+    n_forcing = 0
+/
+
+&initial_stress_list
+    n_initial_stress = 0
+/
+
+&seismogram_list
+    n_seismograms = 0
+/
+
+&plane_output_list
+    n_plane_out = 0
+/
+
+&slice_output_list
+    n_slice_output = 0
+/
+
+&moment_tensor_list
+    n_sources = 0
+/

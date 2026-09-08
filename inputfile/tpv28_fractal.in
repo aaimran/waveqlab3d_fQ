@@ -1,0 +1,66 @@
+kd3d input file: small version of TPV102
+
+&problem_list
+ name = 'data/tpv28_fractal', 
+ problem = 'TPV28', 
+ nblocks = 2,
+ t_final = 12d0, 
+ CFL = 0.5d0,
+ coupling = 'slip-weakening_friction', 
+ type_of_mesh = 'curvilinear',
+ w_stride = 1, 
+ w_fault = T /
+
+&block_list
+btp(1)%nqrs = 201, 201, 401,
+btp(1)%aqrs = -20d0, 0d0, -20d0,
+btp(1)%bqrs = 0d0, 20d0, 20d0,
+btp(1)%rho_s_p = 2.67d0, 3.464d0, 6d0,
+btp(1)%lqrs = 1, 2, 1,
+btp(1)%rqrs = 0, 1, 1,
+btp(1)%lc = 1d0,
+btp(1)%rc = 0d0,
+btp(1)%profile_type= 'read_from_memomry_fractal',
+btp(1)%profile_path= '/data/dunham/kduru/fault_200by400_20ppWl_seed200.dat', 
+
+btp(2)%nqrs = 201, 201, 401,
+btp(2)%aqrs = 0d0, 0d0, -20d0,
+btp(2)%bqrs = 20d0, 20d0, 20d0,
+btp(2)%rho_s_p = 2.67d0, 3.464d0, 6d0,
+btp(2)%lqrs = 0, 2, 1,
+btp(2)%rqrs = 1, 1, 1,
+btp(2)%lc = 0d0,
+btp(2)%rc = 1d0,
+btp(2)%profile_type='read_from_memomry_fractal',
+btp(2)%profile_path='/data/dunham/kduru/fault_200by400_20ppWl_seed200.dat' /
+
+&moment_tensor_list
+ use_moment_tensor = F, 
+ x = 3d0, 
+ y = 0d0, 
+ z = 0d0,
+ M0 = 370.3703703703703d0, 
+ T = 0.1d0, 
+ sigma = 0.2d0 /
+
+
+&mms_list
+ use_mms = F /
+
+&output_list
+ output_seismograms = T,
+ output_fields_block1 = F, 
+ output_fields_block2 = F, 
+ stride_fields = 1 /
+
+!---begin:station_listU---
+-3d0 0d0 -15d0
+-3d0 0d0 0d0
+-3d0 0d0 15d0
+!---end:station_listU---
+
+!---begin:station_listV---
+3d0 0d0 -15d0
+3d0 0d0 0d0
+3d0 0d0 15d0
+!---end:station_listV---

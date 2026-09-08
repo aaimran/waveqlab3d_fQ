@@ -1,0 +1,3221 @@
+module RHS_Interior
+
+  use common, only : wp
+  
+contains
+  
+  
+  subroutine RHS_Center(F, G, M, type_of_mesh)
+    
+    use datatypes, only: block_type,block_fields, block_grid_t, block_material
+    use JU_xJU_yJU_z6, only : JJU_x6_interior, &
+                              JJU_x2_interior_upwind, JJU_x3_interior_upwind, &
+                              JJU_x4_interior_upwind, JJU_x5_interior_upwind, &
+                              JJU_x6_interior_upwind, JJU_x7_interior_upwind, &
+                              JJU_x8_interior_upwind, JJU_x9_interior_upwind, &
+                              JJU_x3_interior_upwind_drp,&
+                              JJU_x4_interior_upwind_drp,JJU_x5_interior_upwind_drp,&
+                              JJU_x6_interior_upwind_drp,JJU_x7_interior_upwind_drp,&
+                              JJU_x66_interior_upwind_drp,JJU_x679_interior_upwind_drp
+    implicit none
+    
+    !type(block_fields), intent(inout):: F
+    type(block_type), intent(inout):: F
+    type(block_grid_t), intent(in) :: G
+     type(block_material), intent(inout) :: M
+    
+    character(len=64), intent(in) :: type_of_mesh
+    
+    
+    
+    select case(F%fd_type)
+       
+    case('traditional')
+       ! compute all spatial derivatives and add interior rates to rates array, no forcing
+       call JJU_x6_interior(F, G, M, type_of_mesh)
+       
+       ! print *, 'interior'
+       
+       
+    case('upwind')
+       ! compute all spatial derivatives and add interior rates to rates array, no forcing
+
+       if (F%order .eq. 2) then 
+            call JJU_x2_interior_upwind(F, G, M, type_of_mesh)
+       endif
+
+       if (F%order .eq. 3) then 
+          call JJU_x3_interior_upwind(F, G, M, type_of_mesh)
+       endif
+
+       if (F%order .eq. 4) then 
+            call JJU_x4_interior_upwind(F, G, M, type_of_mesh)
+       endif
+
+       if (F%order .eq. 5) then 
+            call JJU_x5_interior_upwind(F, G, M, type_of_mesh)
+       endif
+       
+       if (F%order .eq. 6) then
+          !return
+          call JJU_x6_interior_upwind(F, G, M, type_of_mesh)
+       
+       endif
+
+       if (F%order .eq. 7) then
+          !return
+          call JJU_x7_interior_upwind(F, G, M, type_of_mesh)
+       
+       endif
+
+       if (F%order .eq. 8) then
+          !return
+          call JJU_x8_interior_upwind(F, G, M, type_of_mesh)
+       
+       endif
+
+       if (F%order .eq. 9) then
+          !return
+          call JJU_x9_interior_upwind(F, G, M, type_of_mesh)
+       
+       endif
+
+    case('upwind_drp')
+
+       if (F%order .eq. 3) then
+          !return
+          call JJU_x3_interior_upwind_drp(F, G, M, type_of_mesh)
+       
+       endif
+
+       if (F%order .eq. 4) then
+          !return
+          call JJU_x4_interior_upwind_drp(F, G, M, type_of_mesh)
+       
+       endif
+
+       if (F%order .eq. 5) then
+          !return
+          call JJU_x5_interior_upwind_drp(F, G, M, type_of_mesh)
+       
+       endif
+
+       if (F%order .eq. 6) then
+          !return
+          call JJU_x6_interior_upwind_drp(F, G, M, type_of_mesh)
+       
+       endif
+
+       if (F%order .eq. 7) then
+          !return
+          call JJU_x7_interior_upwind_drp(F, G, M, type_of_mesh)
+       
+       endif
+
+      if (F%order .eq. 66) then
+          !return
+          call JJU_x66_interior_upwind_drp(F, G, M, type_of_mesh)
+       
+       endif
+
+      if (F%order .eq. 679) then
+          !return
+          call JJU_x679_interior_upwind_drp(F, G, M, type_of_mesh)
+       
+       endif
+
+
+
+    end select
+  end subroutine RHS_center
+  
+  
+     subroutine RHS_near_boundaries(F, G, M)
+
+    use common, only : wp
+    use datatypes, only: block_type, block_fields, block_grid_t, block_material,block_pml
+    use JU_xJU_yJU_z6, only : JJU_x6, JJU_x2_upwind, JJU_x3_upwind, JJU_x4_upwind,&
+                              JJU_x5_upwind, JJU_x6_upwind, JJU_x6_upwind2,&
+                              JJU_x7_upwind, JJU_x8_upwind, JJU_x9_upwind ,&
+                              JJU_x3_upwind_drp,&
+                              JJU_x4_upwind_drp,JJU_x5_upwind_drp,&
+                              JJU_x6_upwind_drp,JJU_x7_upwind_drp, &
+                              JJU_x66_upwind_drp,JJU_x679_upwind_drp
+
+    implicit none
+
+    !type(block_fields), intent(inout):: F
+    type(block_type), intent(inout):: F
+    type(block_grid_t), intent(in) :: G
+     type(block_material), intent(inout) :: M
+
+    integer :: mbx, mby, mbz, pbx, pby, pbz, &
+               mx,my,mz, px, py, pz, nx, ny, nz, n ! number of grid points and fields
+    real(kind = wp) :: hq, hr, hs                                          ! spatial steps
+
+    ! work arrays
+    real(kind = wp), dimension(:), allocatable :: Ux, Uy, Uz ! to hold derivatives
+    real(kind = wp), dimension(:), allocatable :: DU  ! to hold rates
+     integer :: x, y, z
+    real(kind = wp) :: rhoJ_inv, lambda2mu
+    integer :: ix, iy, iz,  fx, fy, fz
+    
+    
+    ! compute all spatial derivatives and add interior rates to rates array, no forcing
+    !
+    ! this routine can be used for any point in the interior, both near boundaries and away from them
+    !
+    ! here, it is used only for points near boundaries and an optimized version is used above
+    ! for points away from boundaries, where FD stencil is identical at every point
+
+    mbx = G%C%mbq
+    mby = G%C%mbr
+    mbz = G%C%mbs
+    pbx = G%C%pbq
+    pby = G%C%pbr
+    pbz = G%C%pbs
+
+    mx = G%C%mq
+    my = G%C%mr
+    mz = G%C%ms
+    px = G%C%pq
+    py = G%C%pr
+    pz = G%C%ps
+    nx = G%C%nq
+    ny = G%C%nr
+    nz = G%C%ns
+
+    n = size(F%F%F, 4)
+    
+    hq = G%hq
+    hr = G%hr
+    hs = G%hs
+    
+    allocate(Ux(n), Uy(n), Uz(n), DU(n))
+    
+    ix = 6
+    iy = 6
+    iz = 6
+
+    fx = 6
+    fy = 6
+    fz = 6
+
+    if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 6)
+    if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 6)
+    
+    if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 6)
+    if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 6)
+    
+    if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 6)
+    if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 6)
+
+    !print *, F%fd_type, 'fdtype'
+    select case(F%fd_type)
+     
+
+    case('traditional')
+
+    !print *, 'traditional'
+    
+     do z = mz, pz
+          do y = my, py
+               do x = mx, px
+             
+               ! cycle if an interior point
+               if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                    ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                    ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+             
+             ! compute spatial derivatives, 6th order accuracyfd_type
+               call JJU_x6(x, y, z, F%F, G, G%metricx, Ux)
+               call JJU_x6(x, y, z, F%F, G, G%metricy, Uy)
+               call JJU_x6(x, y, z, F%F, G, G%metricz, Uz)
+             
+               rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+               lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+             
+            
+             
+               ! compute rates
+               DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+               DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+               DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+
+               DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+               DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+               DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+             
+               DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+               DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+               DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+               if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+             
+             ! compute pml rhs to be used in runge-kutta time-step
+             ! and append pml auxiliary functions to elastic-rates DU
+               call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+             
+             ! add new rates to rates arrays
+               F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+               F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+               F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+               F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+               F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+               F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+               F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+               F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+               F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+             
+               end do
+          end do
+     end do
+
+
+
+    case('upwind')
+
+    if (F%order .eq. 2) then
+     !print *, 'upwind'
+       ix = 2
+       iy = 2
+       iz = 2
+       
+       fx = 2
+       fy = 2
+       fz = 2
+       
+       if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 2)
+       if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 2)
+       
+       if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 2)
+       if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 2)
+       
+       if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 2)
+       if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 2)
+       
+          do z = mz, pz
+               do y = my, py
+                    do x = mx, px
+               
+                    ! cycle if an interior point
+                    if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                         ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                         ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+               
+               ! compute spatial derivatives, 6th order accuracyfd_type
+                    call JJU_x2_upwind(x, y, z, F%F, G, G%metricx, Ux)
+                    call JJU_x2_upwind(x, y, z, F%F, G, G%metricy, Uy)
+                    call JJU_x2_upwind(x, y, z, F%F, G, G%metricz, Uz)
+               
+                    ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                    ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+
+                    rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                    lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+               
+               
+               
+                    ! compute rates 
+
+                    DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                    DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                    DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+               
+                    DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                    DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                    DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+               
+                    DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                    DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                    DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                    if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               
+                    ! compute pml rhs to be used in runge-kutta time-step
+                    ! and append pml auxiliary functions to elastic-rates DU
+                    ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                    call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+               
+               ! add new rates to rates arrays
+                    F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                    F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                    F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                    F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                    F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                    F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                    F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                    F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                    F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+               
+                    end do
+               end do
+          end do
+
+     endif
+
+     if (F%order .eq. 3) then
+     !print *, 'upwind'
+        ix = 2
+        iy = 2
+        iz = 2
+        
+        fx = 2
+        fy = 2
+        fz = 2
+        
+        if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 2)
+        if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 2)
+        
+        if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 2)
+        if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 2)
+        
+        if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 2)
+        if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 2)
+
+          do z = mz, pz
+               do y = my, py
+                    do x = mx, px
+               
+                    ! cycle if an interior point
+                     if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                          ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                          ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+               
+               ! compute spatial derivatives, 6th order accuracyfd_type
+                    call JJU_x3_upwind(x, y, z, F%F, G, G%metricx, Ux)
+                    call JJU_x3_upwind(x, y, z, F%F, G, G%metricy, Uy)
+                    call JJU_x3_upwind(x, y, z, F%F, G, G%metricz, Uz)
+               
+                    ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                    ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+
+                    rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                    lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+               
+               
+               
+                    ! compute rates 
+
+                    DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                    DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                    DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+               
+                    DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                    DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                    DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+               
+                    DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                    DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                    DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                    if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               
+                    ! compute pml rhs to be used in runge-kutta time-step
+                    ! and append pml auxiliary functions to elastic-rates DU
+                    ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                    call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+               
+               ! add new rates to rates arrays
+                    F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                    F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                    F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                    F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                    F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                    F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                    F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                    F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                    F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+               
+                    end do
+               end do
+          end do
+
+     endif
+
+     if (F%order .eq. 4) then
+        !print *, 'upwind'
+        ix = 4
+        iy = 4
+        iz = 4
+        
+        fx = 4
+        fy = 4
+        fz = 4
+        
+        if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 4)
+        if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 4)
+        
+        if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 4)
+        if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 4)
+        
+        if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 4)
+        if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 4)
+
+     
+          do z = mz, pz
+               do y = my, py
+                    do x = mx, px
+               
+                    ! cycle if an interior point
+                    if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                         ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                         ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+               
+               ! compute spatial derivatives, 6th order accuracyfd_type
+                    call JJU_x4_upwind(x, y, z, F%F, G, G%metricx, Ux)
+                    call JJU_x4_upwind(x, y, z, F%F, G, G%metricy, Uy)
+                    call JJU_x4_upwind(x, y, z, F%F, G, G%metricz, Uz)
+               
+                    ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                    ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+
+                    rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                    lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+               
+               
+               
+                    ! compute rates 
+
+                    DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                    DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                    DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+               
+                    DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                    DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                    DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+               
+                    DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                    DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                    DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                    if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               
+                    ! compute pml rhs to be used in runge-kutta time-step
+                    ! and append pml auxiliary functions to elastic-rates DU
+                    ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                    call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+               
+               ! add new rates to rates arrays
+                    F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                    F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                    F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                    F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                    F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                    F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                    F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                    F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                    F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+               
+                    end do
+               end do
+          end do
+
+     endif
+
+     if (F%order .eq. 5) then
+     !print *, 'upwind'
+        ix = 4
+        iy = 4
+        iz = 4
+        
+        fx = 4
+        fy = 4
+        fz = 4
+        
+        if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 4)
+        if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 4)
+        
+        if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 4)
+        if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 4)
+        
+        if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 4)
+        if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 4)
+        
+          do z = mz, pz
+               do y = my, py
+                    do x = mx, px
+               
+                    ! cycle if an interior point
+                    if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                         ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                         ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+               
+               ! compute spatial derivatives, 6th order accuracyfd_type
+                    call JJU_x5_upwind(x, y, z, F%F, G, G%metricx, Ux)
+                    call JJU_x5_upwind(x, y, z, F%F, G, G%metricy, Uy)
+                    call JJU_x5_upwind(x, y, z, F%F, G, G%metricz, Uz)
+               
+                    ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                    ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+
+                    rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                    lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+               
+               
+               
+                    ! compute rates 
+
+                    DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                    DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                    DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+               
+                    DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                    DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                    DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+               
+                    DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                    DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                    DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                    if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               
+                    ! compute pml rhs to be used in runge-kutta time-step
+                    ! and append pml auxiliary functions to elastic-rates DU
+                    ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                    call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+               
+               ! add new rates to rates arrays
+                    F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                    F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                    F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                    F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                    F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                    F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                    F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                    F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                    F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+               
+                    end do
+               end do
+          end do
+
+     endif
+    
+     if (F%order .eq. 6) then
+        !print *, 'order 6, upwind'
+
+        ix = 6
+        iy = 6
+        iz = 6
+        
+        fx = 6
+        fy = 6
+        fz = 6
+        
+        if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 6)
+        if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 6)
+        
+        if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 6)
+        if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 6)
+        
+        if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 6)
+        if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 6)
+        
+        
+        do z = mz, pz
+           do y = my, py
+              do x = mx, px
+                 
+                 ! cycle if an interior point
+                 if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                      ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                      ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+                 
+                 ! compute spatial derivatives, 6th order accuracyfd_type
+                 call JJU_x6_upwind(x, y, z, F%F, G, G%metricx, Ux)
+                 call JJU_x6_upwind(x, y, z, F%F, G, G%metricy, Uy)
+                 call JJU_x6_upwind(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricx, Ux)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricy, Uy)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                 ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 !print *, Ux, Uy, Uz
+                 rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                 lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 
+                 !print *, x, y, z, G%metricx(x, y, z, 1), G%metricx(x, y, z, 2), G%metricx(x, y, z, 3)
+                 !print *, x, y, z, G%metricy(x, y, z, 1), G%metricy(x, y, z, 2), G%metricy(x, y, z, 3)
+                 !print *, x, y, z, G%metricz(x, y, z, 1), G%metricz(x, y, z, 2), G%metricz(x, y, z, 3)
+                 
+                 ! compute rates 
+                 
+                 DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                 DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                 DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+                 
+                 DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                 DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                 DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+                 
+                 DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                 DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                 DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                 if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+                 
+                 ! compute pml rhs to be used in runge-kutta time-step
+                 ! and append pml auxiliary functions to elastic-rates DU
+                 ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                 call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+                 
+                 ! add new rates to rates arrays
+                 F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                 F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                 F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                 F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                 F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                 F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                 F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                 F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                 F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+                 
+              end do
+           end do
+        end do
+        
+     endif
+
+     if (F%order .eq. 7) then
+        !print *, 'order 6, upwind'
+        ix = 6
+        iy = 6
+        iz = 6
+        
+        fx = 6
+        fy = 6
+        fz = 6
+        
+        if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 6)
+        if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 6)
+        
+        if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 6)
+        if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 6)
+        
+        if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 6)
+        if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 6)
+        
+        do z = mz, pz
+           do y = my, py
+              do x = mx, px
+                 
+                 !cycle if an interior point
+                 if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                      ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                      ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+                 
+                 ! compute spatial derivatives, 6th order accuracyfd_type
+                 call JJU_x7_upwind(x, y, z, F%F, G, G%metricx, Ux)
+                 call JJU_x7_upwind(x, y, z, F%F, G, G%metricy, Uy)
+                 call JJU_x7_upwind(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricx, Ux)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricy, Uy)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                 ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 !print *, Ux, Uy, Uz
+                 rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                 lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 
+                 !print *, x, y, z, G%metricx(x, y, z, 1), G%metricx(x, y, z, 2), G%metricx(x, y, z, 3)
+                 !print *, x, y, z, G%metricy(x, y, z, 1), G%metricy(x, y, z, 2), G%metricy(x, y, z, 3)
+                 !print *, x, y, z, G%metricz(x, y, z, 1), G%metricz(x, y, z, 2), G%metricz(x, y, z, 3)
+                 
+                 ! compute rates 
+                 
+                 DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                 DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                 DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+                 
+                 DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                 DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                 DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+                 
+                 DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                 DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                 DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                 if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+                 
+                 ! compute pml rhs to be used in runge-kutta time-step
+                 ! and append pml auxiliary functions to elastic-rates DU
+                 ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                 call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+                 
+                 ! add new rates to rates arrays
+                 F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                 F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                 F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                 F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                 F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                 F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                 F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                 F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                 F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+                 
+              end do
+           end do
+        end do
+        
+     endif
+
+       if (F%order .eq. 8) then
+        !print *, 'order 6, upwind'
+
+          ix = 8
+          iy = 8
+          iz = 8
+          
+          fx = 8
+          fy = 8
+          fz = 8
+
+          if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 8)
+          if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 8)
+          
+          if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 8)
+          if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 8)
+          
+          if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 8)
+          if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 8)
+          
+        do z = mz, pz
+           do y = my, py
+              do x = mx, px
+                 
+                 !cycle if an interior point
+                 if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                      ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                      ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+                 
+                 ! compute spatial derivatives, 6th order accuracyfd_type
+                 call JJU_x8_upwind(x, y, z, F%F, G, G%metricx, Ux)
+                 call JJU_x8_upwind(x, y, z, F%F, G, G%metricy, Uy)
+                 call JJU_x8_upwind(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricx, Ux)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricy, Uy)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                 ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 !print *, Ux, Uy, Uz
+                 rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                 lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 
+                 !print *, x, y, z, G%metricx(x, y, z, 1), G%metricx(x, y, z, 2), G%metricx(x, y, z, 3)
+                 !print *, x, y, z, G%metricy(x, y, z, 1), G%metricy(x, y, z, 2), G%metricy(x, y, z, 3)
+                 !print *, x, y, z, G%metricz(x, y, z, 1), G%metricz(x, y, z, 2), G%metricz(x, y, z, 3)
+                 
+                 ! compute rates 
+                 
+                 DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                 DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                 DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+                 
+                 DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                 DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                 DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+                 
+                 DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                 DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                 DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                 if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+                 
+                 ! compute pml rhs to be used in runge-kutta time-step
+                 ! and append pml auxiliary functions to elastic-rates DU
+                 ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                 call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+                 
+                 ! add new rates to rates arrays
+                 F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                 F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                 F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                 F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                 F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                 F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                 F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                 F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                 F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+                 
+              end do
+           end do
+        end do
+        
+     endif
+
+
+      if (F%order .eq. 9) then
+        !print *, 'order 6, upwind'
+         ix = 8
+         iy = 8
+         iz = 8
+         
+         fx = 8
+         fy = 8
+         fz = 8
+         
+         if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 8)
+         if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 8)
+
+         if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 8)
+         if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 8)
+         
+         if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 8)
+         if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 8)
+         
+        do z = mz, pz
+           do y = my, py
+              do x = mx, px
+                 
+                 !cycle if an interior point
+                 if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                      ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                      ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+                 
+                 ! compute spatial derivatives, 6th order accuracyfd_type
+                 call JJU_x9_upwind(x, y, z, F%F, G, G%metricx, Ux)
+                 call JJU_x9_upwind(x, y, z, F%F, G, G%metricy, Uy)
+                 call JJU_x9_upwind(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricx, Ux)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricy, Uy)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                 ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 !print *, Ux, Uy, Uz
+                 rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                 lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 
+                 !print *, x, y, z, G%metricx(x, y, z, 1), G%metricx(x, y, z, 2), G%metricx(x, y, z, 3)
+                 !print *, x, y, z, G%metricy(x, y, z, 1), G%metricy(x, y, z, 2), G%metricy(x, y, z, 3)
+                 !print *, x, y, z, G%metricz(x, y, z, 1), G%metricz(x, y, z, 2), G%metricz(x, y, z, 3)
+                 
+                 ! compute rates 
+                 
+                 DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                 DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                 DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+                 
+                 DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                 DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                 DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+                 
+                 DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                 DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                 DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                 if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+                 
+                 ! compute pml rhs to be used in runge-kutta time-step
+                 ! and append pml auxiliary functions to elastic-rates DU
+                 ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                 call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+                 
+                 ! add new rates to rates arrays
+                 F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                 F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                 F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                 F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                 F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                 F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                 F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                 F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                 F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+                 
+              end do
+           end do
+        end do
+        
+     endif
+
+
+  case('upwind_drp')
+
+
+     if (F%order .eq. 3) then
+     !print *, 'upwind'
+        ix = 4
+        iy = 4
+        iz = 4
+        
+        fx = 4
+        fy = 4
+        fz = 4
+        
+        if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 4)
+        if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 4)
+        
+        if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 4)
+        if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 4)
+        
+        if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 4)
+        if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 4)
+        
+          do z = mz, pz
+               do y = my, py
+                    do x = mx, px
+               
+                    ! cycle if an interior point
+                    if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                         ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                         ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+               
+               ! compute spatial derivatives, 6th order accuracyfd_type
+                    call JJU_x3_upwind_drp(x, y, z, F%F, G, G%metricx, Ux)
+                    call JJU_x3_upwind_drp(x, y, z, F%F, G, G%metricy, Uy)
+                    call JJU_x3_upwind_drp(x, y, z, F%F, G, G%metricz, Uz)
+               
+                    ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                    ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+
+                    rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                    lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+               
+               
+               
+                    ! compute rates 
+
+                    DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                    DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                    DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+               
+                    DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                    DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                    DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+               
+                    DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                    DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                    DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                    if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               
+                    ! compute pml rhs to be used in runge-kutta time-step
+                    ! and append pml auxiliary functions to elastic-rates DU
+                    ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                    call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+               
+               ! add new rates to rates arrays
+                    F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                    F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                    F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                    F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                    F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                    F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                    F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                    F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                    F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+               
+                    end do
+               end do
+          end do
+
+     endif
+
+
+     if (F%order .eq. 4) then
+
+        ix = 6
+        iy = 6
+        iz = 6
+        
+        fx = 6
+        fy = 6
+        fz = 6
+        
+        if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 6)
+        if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 6)
+        
+        if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 6)
+        if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 6)
+        
+        if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 6)
+        if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 6)
+        
+        do z = mz, pz
+           do y = my, py
+              do x = mx, px
+                 
+                 !cycle if an interior point
+                 if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                      ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                      ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+                 
+                 ! compute spatial derivatives, 6th order accuracyfd_type
+                 call JJU_x4_upwind_drp(x, y, z, F%F, G, G%metricx, Ux)
+                 call JJU_x4_upwind_drp(x, y, z, F%F, G, G%metricy, Uy)
+                 call JJU_x4_upwind_drp(x, y, z, F%F, G, G%metricz, Uz)
+ 
+                 rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                 lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 
+                 DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                 DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                 DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+                 
+                 DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                 DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                 DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+                 
+                 DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                 DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                 DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                 if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+                 
+                 ! compute pml rhs to be used in runge-kutta time-step
+                 ! and append pml auxiliary functions to elastic-rates DU
+                 ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                 call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+                 
+                 ! add new rates to rates arrays
+                 F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                 F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                 F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                 F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                 F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                 F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                 F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                 F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                 F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+                 
+              end do
+           end do
+        end do
+        
+     endif
+
+if (F%order .eq. 5) then
+
+        ix = 6
+        iy = 6
+        iz = 6
+        
+        fx = 6
+        fy = 6
+        fz = 6
+        
+        if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 6)
+        if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 6)
+        
+        if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 6)
+        if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 6)
+        
+        if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 6)
+        if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 6)
+        
+        do z = mz, pz
+           do y = my, py
+              do x = mx, px
+                 
+                 !cycle if an interior point
+                 if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                      ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                      ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+                 
+                 ! compute spatial derivatives, 6th order accuracyfd_type
+                 call JJU_x5_upwind_drp(x, y, z, F%F, G, G%metricx, Ux)
+                 call JJU_x5_upwind_drp(x, y, z, F%F, G, G%metricy, Uy)
+                 call JJU_x5_upwind_drp(x, y, z, F%F, G, G%metricz, Uz)
+ 
+                 rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                 lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 
+                 DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                 DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                 DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+                 
+                 DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                 DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                 DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+                 
+                 DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                 DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                 DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                 if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+                 
+                 ! compute pml rhs to be used in runge-kutta time-step
+                 ! and append pml auxiliary functions to elastic-rates DU
+                 ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                 call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+                 
+                 ! add new rates to rates arrays
+                 F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                 F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                 F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                 F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                 F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                 F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                 F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                 F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                 F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+                 
+              end do
+           end do
+        end do
+        
+     endif
+
+if (F%order .eq. 6) then
+        !print *, 'order 6, upwind'
+         ix = 8
+         iy = 8
+         iz = 8
+         
+         fx = 8
+         fy = 8
+         fz = 8
+         
+         if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 8)
+         if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 8)
+
+         if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 8)
+         if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 8)
+         
+         if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 8)
+         if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 8)
+         
+        do z = mz, pz
+           do y = my, py
+              do x = mx, px
+                 
+                 !cycle if an interior point
+
+                 if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                      ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                      ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+                 
+                 ! compute spatial derivatives, 6th order accuracyfd_type
+                 call JJU_x6_upwind_drp(x, y, z, F%F, G, G%metricx, Ux)
+                 call JJU_x6_upwind_drp(x, y, z, F%F, G, G%metricy, Uy)
+                 call JJU_x6_upwind_drp(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricx, Ux)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricy, Uy)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                 ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 !print *, Ux, Uy, Uz
+                 rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                 lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 
+                 !print *, x, y, z, G%metricx(x, y, z, 1), G%metricx(x, y, z, 2), G%metricx(x, y, z, 3)
+                 !print *, x, y, z, G%metricy(x, y, z, 1), G%metricy(x, y, z, 2), G%metricy(x, y, z, 3)
+                 !print *, x, y, z, G%metricz(x, y, z, 1), G%metricz(x, y, z, 2), G%metricz(x, y, z, 3)
+                 
+                 ! compute rates 
+                 
+                 DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                 DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                 DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+                 
+                 DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                 DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                 DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+                 
+                 DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                 DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                 DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                 if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+                 
+                 ! compute pml rhs to be used in runge-kutta time-step
+                 ! and append pml auxiliary functions to elastic-rates DU
+                 ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                 call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+                 
+                 ! add new rates to rates arrays
+                 F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                 F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                 F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                 F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                 F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                 F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                 F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                 F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                 F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+                 
+              end do
+           end do
+        end do
+        
+     endif
+
+if (F%order .eq. 7) then
+        !print *, 'order 6, upwind'
+         ix = 8
+         iy = 8
+         iz = 8
+         
+         fx = 8
+         fy = 8
+         fz = 8
+         
+         if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 8)
+         if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 8)
+
+         if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 8)
+         if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 8)
+         
+         if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 8)
+         if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 8)
+         
+        do z = mz, pz
+           do y = my, py
+              do x = mx, px
+                 
+                 !cycle if an interior point
+
+                 if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                      ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                      ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+                 
+                 ! compute spatial derivatives, 6th order accuracyfd_type
+                 call JJU_x7_upwind_drp(x, y, z, F%F, G, G%metricx, Ux)
+                 call JJU_x7_upwind_drp(x, y, z, F%F, G, G%metricy, Uy)
+                 call JJU_x7_upwind_drp(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricx, Ux)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricy, Uy)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                 ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 !print *, Ux, Uy, Uz
+                 rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                 lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 
+                 !print *, x, y, z, G%metricx(x, y, z, 1), G%metricx(x, y, z, 2), G%metricx(x, y, z, 3)
+                 !print *, x, y, z, G%metricy(x, y, z, 1), G%metricy(x, y, z, 2), G%metricy(x, y, z, 3)
+                 !print *, x, y, z, G%metricz(x, y, z, 1), G%metricz(x, y, z, 2), G%metricz(x, y, z, 3)
+                 
+                 ! compute rates 
+                 
+                 DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                 DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                 DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+                 
+                 DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                 DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                 DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+                 
+                 DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                 DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                 DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                 if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+                 
+                 ! compute pml rhs to be used in runge-kutta time-step
+                 ! and append pml auxiliary functions to elastic-rates DU
+                 ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                 call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+                 
+                 ! add new rates to rates arrays
+                 F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                 F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                 F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                 F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                 F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                 F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                 F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                 F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                 F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+                 
+              end do
+           end do
+        end do
+        
+     endif
+
+   if (F%order .eq. 66) then
+        !print *, 'order 6, upwind'
+
+        ix = 6
+        iy = 6
+        iz = 6
+        
+        fx = 6
+        fy = 6
+        fz = 6
+        
+        if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 6)
+        if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 6)
+        
+        if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 6)
+        if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 6)
+        
+        if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 6)
+        if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 6)
+        
+        
+        do z = mz, pz
+           do y = my, py
+              do x = mx, px
+                 
+                 ! cycle if an interior point
+                 if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                      ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                      ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+                 
+                 ! compute spatial derivatives, 6th order accuracyfd_type
+                 call JJU_x66_upwind_drp(x, y, z, F%F, G, G%metricx, Ux)
+                 call JJU_x66_upwind_drp(x, y, z, F%F, G, G%metricy, Uy)
+                 call JJU_x66_upwind_drp(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricx, Ux)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricy, Uy)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                 ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 !print *, Ux, Uy, Uz
+                 rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                 lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 
+                 !print *, x, y, z, G%metricx(x, y, z, 1), G%metricx(x, y, z, 2), G%metricx(x, y, z, 3)
+                 !print *, x, y, z, G%metricy(x, y, z, 1), G%metricy(x, y, z, 2), G%metricy(x, y, z, 3)
+                 !print *, x, y, z, G%metricz(x, y, z, 1), G%metricz(x, y, z, 2), G%metricz(x, y, z, 3)
+                 
+                 ! compute rates 
+                 
+                 DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                 DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                 DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+                 
+                 DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                 DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                 DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+                 
+                 DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                 DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                 DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                 if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+                 
+                 ! compute pml rhs to be used in runge-kutta time-step
+                 ! and append pml auxiliary functions to elastic-rates DU
+                 ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                 call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+                 
+                 ! add new rates to rates arrays
+                 F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                 F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                 F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                 F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                 F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                 F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                 F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                 F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                 F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+                 
+              end do
+           end do
+        end do
+        
+     endif
+
+    if (F%order .eq. 679) then
+        !print *, 'order 6, upwind'
+         ix = 8
+         iy = 8
+         iz = 8
+         
+         fx = 8
+         fy = 8
+         fz = 8
+         
+         if (F%PMLB(5)%pml .EQV. .TRUE.) iz = max(F%PMLB(5)%N_pml, 8)
+         if (F%PMLB(6)%pml .EQV. .TRUE.) fz = max(F%PMLB(6)%N_pml, 8)
+
+         if (F%PMLB(3)%pml .EQV. .TRUE.) iy = max(F%PMLB(3)%N_pml, 8)
+         if (F%PMLB(4)%pml .EQV. .TRUE.) fy = max(F%PMLB(4)%N_pml, 8)
+         
+         if (F%PMLB(1)%pml .EQV. .TRUE.) ix = max(F%PMLB(1)%N_pml, 8)
+         if (F%PMLB(2)%pml .EQV. .TRUE.) fx = max(F%PMLB(2)%N_pml, 8)
+         
+        do z = mz, pz
+           do y = my, py
+              do x = mx, px
+                 
+                 !cycle if an interior point
+
+                 if (((iz+1 <= z) .and. (z <= nz - fz)) .and. &
+                      ((iy+1 <= y) .and. (y <= ny - fy)) .and. &
+                      ((ix+1 <= x) .and. (x <= nx - fx))) cycle
+                 
+                 ! compute spatial derivatives, 6th order accuracyfd_type
+                 call JJU_x679_upwind_drp(x, y, z, F%F, G, G%metricx, Ux)
+                 call JJU_x679_upwind_drp(x, y, z, F%F, G, G%metricy, Uy)
+                 call JJU_x679_upwind_drp(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricx, Ux)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricy, Uy)
+                 !call JJU_x6_upwind2(x, y, z, F%F, G, G%metricz, Uz)
+                 
+                 ! rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)) !G%J(x,y,z)) ! 1/(rho*J)
+                 ! lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 !print *, Ux, Uy, Uz
+                 rhoJ_inv = 1.0_wp/(M%M(x,y,z,3)*G%J(x,y,z)) ! 1/(rho*J)
+                 lambda2mu = M%M(x,y,z,1) + 2.0_wp*M%M(x,y,z,2) ! lambda+2*mu
+                 
+                 !print *, x, y, z, G%metricx(x, y, z, 1), G%metricx(x, y, z, 2), G%metricx(x, y, z, 3)
+                 !print *, x, y, z, G%metricy(x, y, z, 1), G%metricy(x, y, z, 2), G%metricy(x, y, z, 3)
+                 !print *, x, y, z, G%metricz(x, y, z, 1), G%metricz(x, y, z, 2), G%metricz(x, y, z, 3)
+                 
+                 ! compute rates 
+                 
+                 DU(1) = (Ux(4) + Uy(7) + Uz(8))*rhoJ_inv
+                 DU(2) = (Ux(7) + Uy(5) + Uz(9))*rhoJ_inv
+                 DU(3) = (Ux(8) + Uy(9) + Uz(6))*rhoJ_inv
+                 
+                 DU(4) = lambda2mu*Ux(1) + M%M(x,y,z,1)*(Uy(2) + Uz(3))
+                 DU(5) = lambda2mu*Uy(2) + M%M(x,y,z,1)*(Ux(1) + Uz(3))
+                 DU(6) = lambda2mu*Uz(3) + M%M(x,y,z,1)*(Ux(1) + Uy(2))
+                 
+                 DU(7) = M%M(x,y,z,2)*(Uy(1) + Ux(2))
+                 DU(8) = M%M(x,y,z,2)*(Uz(1) + Ux(3))
+                 DU(9) = M%M(x,y,z,2)*(Uz(2) + Uy(3))
+
+                 if (M%anelastic) call apply_anelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+                 
+                 ! compute pml rhs to be used in runge-kutta time-step
+                 ! and append pml auxiliary functions to elastic-rates DU
+                 ! compute spatial derivatives, 6th order accuracyfd_type                                                                                                         
+                 call PML(F, M, G, DU, Ux, Uy, Uz, x,y,z,n,rhoJ_inv,lambda2mu)
+                 
+                 ! add new rates to rates arrays
+                 F%F%DF(x,y,z,1) = F%F%DF(x,y,z,1) + DU(1)
+                 F%F%DF(x,y,z,2) = F%F%DF(x,y,z,2) + DU(2)
+                 F%F%DF(x,y,z,3) = F%F%DF(x,y,z,3) + DU(3)
+                 F%F%DF(x,y,z,4) = F%F%DF(x,y,z,4) + DU(4)
+                 F%F%DF(x,y,z,5) = F%F%DF(x,y,z,5) + DU(5)
+                 F%F%DF(x,y,z,6) = F%F%DF(x,y,z,6) + DU(6)
+                 F%F%DF(x,y,z,7) = F%F%DF(x,y,z,7) + DU(7)
+                 F%F%DF(x,y,z,8) = F%F%DF(x,y,z,8) + DU(8)
+                 F%F%DF(x,y,z,9) = F%F%DF(x,y,z,9) + DU(9)
+                 
+              end do
+           end do
+        end do
+        
+     endif
+
+  end select
+  
+  end subroutine RHS_near_boundaries
+
+    subroutine impose_boundary_condition(B, mms_vars, t)
+
+    use datatypes, only : block_type, mms_type, boundary_type, block_material
+    use BoundaryConditions, only : BC_Lx, BC_Ly, BC_Lz, BC_Rx, BC_Ry, BC_Rz
+
+    implicit none
+
+    type(block_type), intent(inout) :: B
+    type(mms_type), intent(in) :: mms_vars                        ! parameters for MMS
+    real(kind = wp), intent(in) :: t                                         ! time
+
+    integer :: mx, my, mz, px, py, pz, n
+    type(boundary_type) :: boundary_vars
+    real(kind = wp) :: rho, mu, lam, tau0, hx, hy, hz                          ! penalty the in x-direction, y-direction, z-direction
+
+    real(kind = wp), dimension(:,:,:), allocatable, save :: U_q, U_r, U_s     ! to hold boundary forcing
+    real(kind = wp) :: U_x(9), U_y(9), U_z(9)     ! to hold boundary forcing
+    
+    integer :: x, y, z
+
+    boundary_vars = B%boundary_vars
+    tau0 = B%tau0
+
+    hx = B%G%hq
+    hy = B%G%hr
+    hz = B%G%hs
+
+    mx = B%G%C%mq
+    my = B%G%C%mr
+    mz = B%G%C%ms
+    px = B%G%C%pq
+    py = B%G%C%pr
+    pz = B%G%C%ps
+
+    n = size(B%F%DF,4)
+
+    ! initialize work array
+
+    if (.not.allocated(U_q)) allocate(U_q(my:py,mz:pz,n))
+    if (.not.allocated(U_r)) allocate(U_r(mx:px,mz:pz,n))
+    if (.not.allocated(U_s)) allocate(U_s(mx:px,my:py,n))
+
+    ! construct boundary forcing
+    if (boundary_vars%Lx > 0) then
+       
+       U_q = BC_Lx(B, boundary_vars%Lx, mms_vars, t)
+       
+       do z = mz, pz
+          do y = my, py
+             
+             lam = B%M%M(mx, y, z, 1)
+             mu =  B%M%M(mx, y, z, 2)
+             rho = B%M%M(mx, y, z, 3)
+             
+             call structure(U_x, U_q(y, z, 1:n), rho, mu, lam)
+             
+             B%F%DF(mx, y, z, 1:n) = B%F%DF(mx, y, z, 1:n) - tau0/(hx)*U_x(1:n)
+             
+             if(B%PMLB(1)%pml .EQV. .TRUE.) then
+
+                B%PMLB(1)%DQ(mx, y, z, 1:n) = B%PMLB(1)%DQ(mx, y, z, 1:n) - tau0/(hx)*U_q(y, z, 1:n)
+                
+             end if
+          end do
+       end do
+    end if
+
+    if (boundary_vars%Rx > 0) then
+       
+       U_q = BC_Rx(B, boundary_vars%Rx, mms_vars, t)
+       
+       do z = mz, pz
+          do y = my, py
+
+             lam = B%M%M(px, y, z, 1)
+             mu =  B%M%M(px, y, z, 2)
+             rho = B%M%M(px, y, z, 3)
+
+             call structure(U_x, U_q(y, z, 1:n), rho, mu, lam)
+
+             B%F%DF(px, y, z, 1:n) = B%F%DF(px, y, z, 1:n) - tau0/(hx)*U_x(1:n)
+       
+             if(B%PMLB(2)%pml .EQV. .TRUE.) then
+                
+                B%PMLB(2)%DQ(px, y, z, 1:n) = B%PMLB(2)%DQ(px, y, z, 1:n) - tau0/(hx)*U_q(y, z, 1:n)
+              
+             end if
+          end do
+       end do
+    end if
+
+
+    if (boundary_vars%Ly > 0) then
+       
+       U_r = BC_Ly(B, boundary_vars%Ly, mms_vars, t)
+       
+       do z = mz, pz
+          do x = mx, px
+
+             lam = B%M%M(x, my, z, 1)
+             mu =  B%M%M(x, my, z, 2)
+             rho = B%M%M(x, my, z, 3)
+
+             call structure(U_y, U_r(x, z, 1:n), rho, mu, lam)
+
+             B%F%DF(x, my, z, 1:n) = B%F%DF(x, my, z, 1:n) - tau0/(hy)*U_y(1:n)
+       
+             if(B%PMLB(3)%pml .EQV. .TRUE.) then
+                B%PMLB(3)%DQ(x, my, z, 1:n) =  B%PMLB(3)%DQ(x, my, z, 1:n) - tau0/(hy)*U_r(x, z, 1:n)
+
+             end if
+             
+          end do
+       end do
+    end if
+
+    if (boundary_vars%Ry > 0) then
+       
+       U_r = BC_Ry(B, boundary_vars%Ry, mms_vars, t)
+       
+       do z = mz, pz
+          do x = mx, px
+
+             lam = B%M%M(x, py, z, 1)
+             mu =  B%M%M(x, py, z, 2)
+             rho = B%M%M(x, py, z, 3)
+
+             call structure(U_y, U_r(x, z, 1:n), rho, mu, lam)
+
+             B%F%DF(x, py, z, 1:n) = B%F%DF(x, py, z, 1:n) - tau0/(hy)*U_y(1:n)
+       
+             if(B%PMLB(4)%pml .EQV. .TRUE.) then
+           
+                B%PMLB(4)%DQ(x, py, z, 1:n) =  B%PMLB(4)%DQ(x, py, z, 1:n) - tau0/(hy)*U_r(x, z, 1:n)
+                
+              end if
+          end do
+       end do
+    end if
+
+
+    if (boundary_vars%Lz > 0) then
+      
+       U_s = BC_Lz(B, boundary_vars%Lz, mms_vars, t)
+       
+       do y = my, py
+          do x = mx, px
+
+             lam = B%M%M(x, y, mz, 1)
+             mu =  B%M%M(x, y, mz, 2)
+             rho = B%M%M(x, y, mz, 3)
+
+             call structure(U_z, U_s(x, y, 1:n), rho, mu, lam)
+
+             B%F%DF(x, y, mz, 1:n) = B%F%DF(x, y, mz, 1:n) - tau0/(hz)*U_z(1:n)
+      
+             if(B%PMLB(5)%pml .EQV. .TRUE.) then
+        
+                B%PMLB(5)%DQ(x, y, mz, 1:n) = B%PMLB(5)%DQ(x, y, mz, 1:n) - (tau0/(hz))*U_s(x, y, 1:n)
+             end if
+          end do
+       end do
+    end if
+
+    if (boundary_vars%Rz > 0) then
+       
+       U_s = BC_Rz(B, boundary_vars%Rz, mms_vars, t)
+
+       do y = my, py
+          do x = mx, px
+
+             lam = B%M%M(x, y, pz, 1)
+             mu =  B%M%M(x, y, pz, 2)
+             rho = B%M%M(x, y, pz, 3)
+
+             call structure(U_z, U_s(x, y, 1:n), rho, mu, lam)
+
+             B%F%DF(x, y, pz, 1:n) = B%F%DF(x, y, pz, 1:n) - tau0/(hz)*U_z(1:n)
+       
+             if(B%PMLB(6)%pml .EQV. .TRUE.) then
+    
+                B%PMLB(6)%DQ(x, y, pz, 1:n) = B%PMLB(6)%DQ(x, y, pz, 1:n) - (tau0/hz)*U_s(x, y, 1:n)
+             end if
+          end do
+       end do
+    end if
+
+  end subroutine Impose_Boundary_Condition
+
+
+  subroutine Impose_Interface_Condition(problem, coupling, I, B, ib, &
+                                        t, stage, mms_vars, handles)
+
+    use mpi3dbasic, only : rank
+    use datatypes, only : block_type, iface_type, mms_type
+    use CouplingForcing, only :  Couple_Interface_x
+    use fault_output, only : fault_type
+
+    ! compute hat variables, SAT forcing terms, and add SAT forcing to rates
+    
+    implicit none
+
+    character(256), intent(in) :: problem
+    character(*),intent(in) :: coupling
+    integer, intent(in) :: stage, ib
+    type(iface_type),intent(inout) :: I
+    type(block_type),intent(inout) :: B
+    type(mms_type), intent(inout) :: mms_vars
+    type(fault_type), intent(inout) :: handles
+    real(kind = wp),intent(in) :: t
+    integer :: mx, my, mz, px, py, pz, n             ! number of grid points and field variables
+
+    real(kind = wp) :: tau0, hx
+    real(kind = wp), dimension(:,:,:), allocatable, save :: F_x, G_x  ! to hold boundary forcing in the negative directions
+    integer :: y, z
+
+    mx = B%G%C%mq
+    px = B%G%C%pq
+    my = B%G%C%mr
+    py = B%G%C%pr
+    mz = B%G%C%ms
+    pz = B%G%C%ps
+
+    hx = B%G%hq
+
+    tau0 = B%tau0
+
+    n = size(B%F%DF, 4)
+    if (.not.allocated(F_x)) allocate(F_x(my:py, mz:pz, n))
+    if (.not.allocated(G_x)) allocate(G_x(my:py, mz:pz, n))
+
+    ! Couple_Interface_x computes hat variables (by solving friction law or interface conditions)
+    ! and also computes SAT forcing terms, but it does not add SAT forcing to rates
+    
+    if (ib == 2) then
+      call Couple_Interface_x(F_x, G_x, problem, coupling, I, B%G, B%M,&
+                            B%B(ib)%F, B%B(ib)%Fopp, B%B(ib)%M, B%B(ib)%Mopp, &
+                            B%B(ib)%n_l, B%B(ib)%n_m, B%B(ib)%n_n, &
+                            ib, t, stage, mms_vars, handles)
+     ! then add SAT forcing to rates
+        do z = mz, pz
+           do y = my, py
+            B%F%DF(px, y, z, 1:n) = B%F%DF(px, y, z, 1:n) - tau0/hx*F_x(y, z, 1:n)
+            end do
+        end do
+
+      else if (ib == 1) then
+       call Couple_Interface_x(F_x, G_x, problem, coupling, I, B%G, B%M, &
+                            B%B(ib)%Fopp, B%B(ib)%F, B%B(ib)%Mopp, B%B(ib)%M, &
+                            B%B(ib)%n_l, B%B(ib)%n_m, B%B(ib)%n_n, &
+                            ib, t, stage, mms_vars, handles)
+     ! then add SAT forcing to rates
+      do z = mz, pz
+         do y = my, py
+          B%F%DF(mx, y, z, 1:n) = B%F%DF(mx, y, z, 1:n) - tau0/hx*G_x(y, z, 1:n)
+          end do
+      end do
+
+     end if
+
+!      print *, ib, G_x(11,11,:)
+     
+
+   end subroutine Impose_Interface_Condition
+
+
+   subroutine PML(F, M, G, DU, Ux, Uy, Uz, x,y,z, n, rhoJ_inv,lambda2mu)
+
+     use common, only : wp
+     use datatypes, only: block_type, block_grid_t, block_material, block_pml
+     use JU_xJU_yJU_z6, only : JJU_x6
+     
+     implicit none
+          
+     type(block_type), intent(inout):: F
+     type(block_grid_t), intent(in) :: G
+     type(block_material), intent(in) :: M
+     real(kind = wp),intent(in) :: rhoJ_inv, lambda2mu
+     integer, intent(in) :: n                      ! number of  fields
+     integer, intent(in) :: x, y, z
+     
+     ! work arrays
+     real(kind = wp), intent(in) :: Ux(n), Uy(n), Uz(n) ! to hold derivatives
+     real(kind = wp),intent(inout) :: DU(n)
+    
+    
+     integer :: nx, ny, nz                          ! number of grid points
+     real(kind = wp) :: hq, hr, hs                  ! spatial steps
+
+     real(kind = wp) :: lam, mu, rho
+   
+   
+   
+    
+    ! pml parameters
+    integer :: npml, p_deg
+    real(kind = wp) :: cfs, dx, dy, dz, d0x, d0y, d0z, Rf                
+
+    nx = G%C%nq
+    ny = G%C%nr
+    nz = G%C%ns
+
+    !n = size(F%F%F, 4)
+
+    hq = G%hq
+    hr = G%hr
+    hs = G%hs
+
+    Rf = 1.0e-3_wp                   !relative pml error
+    p_deg = 1                        !pml polynomial degree
+    cfs = 1.0_wp                        !complex frequency shift
+    
+    d0x = 6.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+    d0y	= 6.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+    d0z	= 6.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+     
+    if (F%fd_type .eq. 'upwind') then
+
+       cfs = 1.0_wp                     !complex frequency shift
+
+       ! PML damping strength
+       d0x	= 6.0_wp*1.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+       d0y      = 6.0_wp*1.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+       d0z      = 6.0_wp*1.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+
+    end if
+    
+    lam = M%M(x,y,z,1)
+    mu  = M%M(x,y,z,2)
+    rho = M%M(x,y,z,3)
+
+ 
+    ! z-dependent layer
+    if(F%PMLB(5)%pml .EQV. .TRUE.) then
+       
+       npml = F%PMLB(5)%N_pml
+       
+       if (z .le. npml) then
+          
+          dz = d0z*(abs(real(z-npml, wp)/real(npml, wp)))**p_deg
+
+          DU(1) = DU(1) - dz*G%J(x,y,z)*F%PMLB(5)%Q(x,y,z,1)*rhoJ_inv
+          DU(2) = DU(2) - dz*G%J(x,y,z)*F%PMLB(5)%Q(x,y,z,2)*rhoJ_inv
+          DU(3) = DU(3) - dz*G%J(x,y,z)*F%PMLB(5)%Q(x,y,z,3)*rhoJ_inv
+          
+          DU(4) = DU(4) - dz*(lambda2mu*F%PMLB(5)%Q(x,y,z,4) &
+               + lam*F%PMLB(5)%Q(x,y,z,5) &
+               + lam*F%PMLB(5)%Q(x,y,z,6))
+          
+          DU(5) = DU(5) - dz*(lam*F%PMLB(5)%Q(x,y,z,4) &
+               + lambda2mu*F%PMLB(5)%Q(x,y,z,5) &
+               + lam*F%PMLB(5)%Q(x,y,z,6))
+          
+          DU(6) = DU(6) - dz*(lam*F%PMLB(5)%Q(x,y,z,4) &
+               + lam*F%PMLB(5)%Q(x,y,z,5) &
+               + lambda2mu*F%PMLB(5)%Q(x,y,z,6))
+          
+          
+          DU(7) = DU(7) - mu*dz*F%PMLB(5)%Q(x,y,z,7)
+          DU(8) = DU(8) - mu*dz*F%PMLB(5)%Q(x,y,z,8)
+          DU(9) = DU(9) - mu*dz*F%PMLB(5)%Q(x,y,z,9)
+          
+          F%PMLB(5)%DQ(x,y,z,1) = F%PMLB(5)%DQ(x,y,z,1) + Uz(8)/G%J(x,y,z) &
+               - (dz+cfs)*F%PMLB(5)%Q(x,y,z,1)
+          F%PMLB(5)%DQ(x,y,z,2) = F%PMLB(5)%DQ(x,y,z,2) + Uz(9)/G%J(x,y,z) &
+               - (dz+cfs)*F%PMLB(5)%Q(x,y,z,2)
+          F%PMLB(5)%DQ(x,y,z,3) = F%PMLB(5)%DQ(x,y,z,3) + Uz(6)/G%J(x,y,z) &
+               - (dz+cfs)*F%PMLB(5)%Q(x,y,z,3)
+          
+          F%PMLB(5)%DQ(x,y,z,4) = F%PMLB(5)%DQ(x,y,z,4) + 0d0 &
+               - (dz+cfs)*F%PMLB(5)%Q(x,y,z,4)
+          
+          F%PMLB(5)%DQ(x,y,z,5) = F%PMLB(5)%DQ(x,y,z,5) + 0d0 &
+               - (dz+cfs)*F%PMLB(5)%Q(x,y,z,5)
+
+          F%PMLB(5)%DQ(x,y,z,6) = F%PMLB(5)%DQ(x,y,z,6) + Uz(3) &
+               - (dz+cfs)*F%PMLB(5)%Q(x,y,z,6)
+
+          F%PMLB(5)%DQ(x,y,z,7) = F%PMLB(5)%DQ(x,y,z,7) + 0d0 &
+               - (dz+cfs)*F%PMLB(5)%Q(x,y,z,7)
+
+          F%PMLB(5)%DQ(x,y,z,8) = F%PMLB(5)%DQ(x,y,z,8) + Uz(1) &
+               - (dz+cfs)*F%PMLB(5)%Q(x,y,z,8)
+          
+          F%PMLB(5)%DQ(x,y,z,9) = F%PMLB(5)%DQ(x,y,z,9) + Uz(2) &
+               - (dz+cfs)*F%PMLB(5)%Q(x,y,z,9)
+          
+       end if
+    end if
+    
+    
+    if(F%PMLB(6)%pml .EQV. .TRUE.) then
+       
+       npml = F%PMLB(6)%N_pml
+       
+       if (z .ge. nz-npml+1) then
+          
+          dz = d0z*(abs(real(z-(nz-npml), wp)/real(npml, wp)))**p_deg
+
+          DU(1) = DU(1) - dz*G%J(x,y,z)*F%PMLB(6)%Q(x,y,z,1)*rhoJ_inv
+          DU(2) = DU(2) - dz*G%J(x,y,z)*F%PMLB(6)%Q(x,y,z,2)*rhoJ_inv
+          DU(3) = DU(3) - dz*G%J(x,y,z)*F%PMLB(6)%Q(x,y,z,3)*rhoJ_inv
+          
+          DU(4) = DU(4) - dz*(lambda2mu*F%PMLB(6)%Q(x,y,z,4) &
+               + lam*F%PMLB(6)%Q(x,y,z,5) &
+               + lam*F%PMLB(6)%Q(x,y,z,6))
+          
+          DU(5) = DU(5) - dz*(lam*F%PMLB(6)%Q(x,y,z,4) &
+               + lambda2mu*F%PMLB(6)%Q(x,y,z,5) &
+               + lam*F%PMLB(6)%Q(x,y,z,6))
+          
+          DU(6) = DU(6) - dz*(lam*F%PMLB(6)%Q(x,y,z,4) &
+               + lam*F%PMLB(6)%Q(x,y,z,5) &
+               + lambda2mu*F%PMLB(6)%Q(x,y,z,6))
+          
+          
+          DU(7) = DU(7) - mu*dz*F%PMLB(6)%Q(x,y,z,7)
+          DU(8) = DU(8) - mu*dz*F%PMLB(6)%Q(x,y,z,8)
+          DU(9) = DU(9) - mu*dz*F%PMLB(6)%Q(x,y,z,9)
+          
+          F%PMLB(6)%DQ(x,y,z,1) = F%PMLB(6)%DQ(x,y,z,1) + Uz(8)/G%J(x,y,z) &
+               - (dz+cfs)*F%PMLB(6)%Q(x,y,z,1)
+          F%PMLB(6)%DQ(x,y,z,2) = F%PMLB(6)%DQ(x,y,z,2) + Uz(9)/G%J(x,y,z) &
+               - (dz+cfs)*F%PMLB(6)%Q(x,y,z,2)
+          F%PMLB(6)%DQ(x,y,z,3) = F%PMLB(6)%DQ(x,y,z,3) + Uz(6)/G%J(x,y,z) &
+               - (dz+cfs)*F%PMLB(6)%Q(x,y,z,3)
+          
+          F%PMLB(6)%DQ(x,y,z,4) = F%PMLB(6)%DQ(x,y,z,4) + 0d0 &
+               - (dz+cfs)*F%PMLB(6)%Q(x,y,z,4)
+          
+          F%PMLB(6)%DQ(x,y,z,5) = F%PMLB(6)%DQ(x,y,z,5) + 0d0 &
+               - (dz+cfs)*F%PMLB(6)%Q(x,y,z,5)
+
+          F%PMLB(6)%DQ(x,y,z,6) = F%PMLB(6)%DQ(x,y,z,6) + Uz(3) &
+               - (dz+cfs)*F%PMLB(6)%Q(x,y,z,6)
+
+          F%PMLB(6)%DQ(x,y,z,7) = F%PMLB(6)%DQ(x,y,z,7) + 0d0 &
+               - (dz+cfs)*F%PMLB(6)%Q(x,y,z,7)
+
+          F%PMLB(6)%DQ(x,y,z,8) = F%PMLB(6)%DQ(x,y,z,8) + Uz(1) &
+               - (dz+cfs)*F%PMLB(6)%Q(x,y,z,8)
+          
+          F%PMLB(6)%DQ(x,y,z,9) = F%PMLB(6)%DQ(x,y,z,9) + Uz(2) &
+               - (dz+cfs)*F%PMLB(6)%Q(x,y,z,9)
+          
+          
+       end if
+    end if
+    !=====================================================================================================
+    
+    ! y-dependent layer
+    if(F%PMLB(3)%pml .EQV. .TRUE.) then
+       
+       npml = F%PMLB(3)%N_pml
+       
+       if (y .le. npml) then
+          
+          dy = d0y*(abs(real(y-(1+npml), wp)/real(npml, wp)))**p_deg
+
+          DU(1) = DU(1) - dy*G%J(x,y,z)*F%PMLB(3)%Q(x,y,z,1)*rhoJ_inv
+          DU(2) = DU(2) - dy*G%J(x,y,z)*F%PMLB(3)%Q(x,y,z,2)*rhoJ_inv
+          DU(3) = DU(3) - dy*G%J(x,y,z)*F%PMLB(3)%Q(x,y,z,3)*rhoJ_inv
+          
+          DU(4) = DU(4) - dy*(lambda2mu*F%PMLB(3)%Q(x,y,z,4) &
+               + lam*F%PMLB(3)%Q(x,y,z,5) &
+               + lam*F%PMLB(3)%Q(x,y,z,6))
+          
+          DU(5) = DU(5) - dy*(lam*F%PMLB(3)%Q(x,y,z,4) &
+               + lambda2mu*F%PMLB(3)%Q(x,y,z,5) &
+               + lam*F%PMLB(3)%Q(x,y,z,6))
+          
+          DU(6) = DU(6) - dy*(lam*F%PMLB(3)%Q(x,y,z,4) &
+               + lam*F%PMLB(3)%Q(x,y,z,5) &
+               + lambda2mu*F%PMLB(3)%Q(x,y,z,6))
+          
+          
+          DU(7) = DU(7) - mu*dy*F%PMLB(3)%Q(x,y,z,7)
+          DU(8) = DU(8) - mu*dy*F%PMLB(3)%Q(x,y,z,8)
+          DU(9) = DU(9) - mu*dy*F%PMLB(3)%Q(x,y,z,9)
+          
+          F%PMLB(3)%DQ(x,y,z,1) = F%PMLB(3)%DQ(x,y,z,1) + Uy(7)/G%J(x,y,z) &
+               - (dy+cfs)*F%PMLB(3)%Q(x,y,z,1)
+          F%PMLB(3)%DQ(x,y,z,2) = F%PMLB(3)%DQ(x,y,z,2) + Uy(5)/G%J(x,y,z) &
+               - (dy+cfs)*F%PMLB(3)%Q(x,y,z,2)
+          F%PMLB(3)%DQ(x,y,z,3) = F%PMLB(3)%DQ(x,y,z,3) + Uy(9)/G%J(x,y,z) &
+               - (dy+cfs)*F%PMLB(3)%Q(x,y,z,3)
+          
+          F%PMLB(3)%DQ(x,y,z,4) = F%PMLB(3)%DQ(x,y,z,4) + 0d0 &
+               - (dy+cfs)*F%PMLB(3)%Q(x,y,z,4)
+          
+          F%PMLB(3)%DQ(x,y,z,5) = F%PMLB(3)%DQ(x,y,z,5) + Uy(2) &
+               - (dy+cfs)*F%PMLB(3)%Q(x,y,z,5)
+
+          F%PMLB(3)%DQ(x,y,z,6) = F%PMLB(3)%DQ(x,y,z,6) + 0d0 &
+               - (dy+cfs)*F%PMLB(3)%Q(x,y,z,6)
+
+          F%PMLB(3)%DQ(x,y,z,7) = F%PMLB(3)%DQ(x,y,z,7) + Uy(1) &
+               - (dy+cfs)*F%PMLB(3)%Q(x,y,z,7)
+
+          F%PMLB(3)%DQ(x,y,z,8) = F%PMLB(3)%DQ(x,y,z,8) + 0d0 &
+               - (dy+cfs)*F%PMLB(3)%Q(x,y,z,8)
+          
+          F%PMLB(3)%DQ(x,y,z,9) = F%PMLB(3)%DQ(x,y,z,9) + Uy(3) &
+               - (dy+cfs)*F%PMLB(3)%Q(x,y,z,9)
+          
+          
+          
+       end if
+    end if
+    
+    
+    if(F%PMLB(4)%pml .EQV. .TRUE.) then
+       
+       npml = F%PMLB(4)%N_pml
+       
+       if (y .ge. ny-npml+1) then
+          
+          dy = d0y*(abs(real(y-(ny-npml), wp)/real(npml, wp)))**p_deg
+
+          DU(1) = DU(1) - dy*G%J(x,y,z)*F%PMLB(4)%Q(x,y,z,1)*rhoJ_inv
+          DU(2) = DU(2) - dy*G%J(x,y,z)*F%PMLB(4)%Q(x,y,z,2)*rhoJ_inv
+          DU(3) = DU(3) - dy*G%J(x,y,z)*F%PMLB(4)%Q(x,y,z,3)*rhoJ_inv
+          
+          DU(4) = DU(4) - dy*(lambda2mu*F%PMLB(4)%Q(x,y,z,4) &
+               + lam*F%PMLB(4)%Q(x,y,z,5) &
+               + lam*F%PMLB(4)%Q(x,y,z,6))
+          
+          DU(5) = DU(5) - dy*(lam*F%PMLB(4)%Q(x,y,z,4) &
+               + lambda2mu*F%PMLB(4)%Q(x,y,z,5) &
+               + lam*F%PMLB(4)%Q(x,y,z,6))
+          
+          DU(6) = DU(6) - dy*(lam*F%PMLB(4)%Q(x,y,z,4) &
+               + lam*F%PMLB(4)%Q(x,y,z,5) &
+               + lambda2mu*F%PMLB(4)%Q(x,y,z,6))
+          
+          
+          DU(7) = DU(7) - mu*dy*F%PMLB(4)%Q(x,y,z,7)
+          DU(8) = DU(8) - mu*dy*F%PMLB(4)%Q(x,y,z,8)
+          DU(9) = DU(9) - mu*dy*F%PMLB(4)%Q(x,y,z,9)
+          
+          F%PMLB(4)%DQ(x,y,z,1) = F%PMLB(4)%DQ(x,y,z,1) + Uy(7)/G%J(x,y,z) &
+               - (dy+cfs)*F%PMLB(4)%Q(x,y,z,1)
+          F%PMLB(4)%DQ(x,y,z,2) = F%PMLB(4)%DQ(x,y,z,2) + Uy(5)/G%J(x,y,z) &
+               - (dy+cfs)*F%PMLB(4)%Q(x,y,z,2)
+          F%PMLB(4)%DQ(x,y,z,3) = F%PMLB(4)%DQ(x,y,z,3) + Uy(9)/G%J(x,y,z) &
+               - (dy+cfs)*F%PMLB(4)%Q(x,y,z,3)
+          
+          F%PMLB(4)%DQ(x,y,z,4) = F%PMLB(4)%DQ(x,y,z,4) + 0d0 &
+               - (dy+cfs)*F%PMLB(4)%Q(x,y,z,4)
+          
+          F%PMLB(4)%DQ(x,y,z,5) = F%PMLB(4)%DQ(x,y,z,5) + Uy(2) &
+               - (dy+cfs)*F%PMLB(4)%Q(x,y,z,5)
+
+          F%PMLB(4)%DQ(x,y,z,6) = F%PMLB(4)%DQ(x,y,z,6) + 0d0 &
+               - (dy+cfs)*F%PMLB(4)%Q(x,y,z,6)
+
+          F%PMLB(4)%DQ(x,y,z,7) = F%PMLB(4)%DQ(x,y,z,7) + Uy(1) &
+               - (dy+cfs)*F%PMLB(4)%Q(x,y,z,7)
+
+          F%PMLB(4)%DQ(x,y,z,8) = F%PMLB(4)%DQ(x,y,z,8) + 0d0 &
+               - (dy+cfs)*F%PMLB(4)%Q(x,y,z,8)
+          
+          F%PMLB(4)%DQ(x,y,z,9) = F%PMLB(4)%DQ(x,y,z,9) + Uy(3) &
+               - (dy+cfs)*F%PMLB(4)%Q(x,y,z,9)
+          
+       end if
+    end if
+             
+    
+    ! x-dependent layer
+    if(F%PMLB(1)%pml .EQV. .TRUE.) then
+       
+       npml = F%PMLB(1)%N_pml
+       
+       if (x .le. npml) then
+          
+          dx = d0x*(abs(real(x-(1+npml), wp)/real(npml, wp)))**p_deg
+          
+          DU(1) = DU(1) - dx*G%J(x,y,z)*F%PMLB(1)%Q(x,y,z,1)*rhoJ_inv
+          DU(2) = DU(2) - dx*G%J(x,y,z)*F%PMLB(1)%Q(x,y,z,2)*rhoJ_inv
+          DU(3) = DU(3) - dx*G%J(x,y,z)*F%PMLB(1)%Q(x,y,z,3)*rhoJ_inv
+          
+          DU(4) = DU(4) - dx*(lambda2mu*F%PMLB(1)%Q(x,y,z,4) &
+               + lam*F%PMLB(1)%Q(x,y,z,5) &
+               + lam*F%PMLB(1)%Q(x,y,z,6))
+          
+          DU(5) = DU(5) - dx*(lam*F%PMLB(1)%Q(x,y,z,4) &
+               + lambda2mu*F%PMLB(1)%Q(x,y,z,5) &
+               + lam*F%PMLB(1)%Q(x,y,z,6))
+          
+          DU(6) = DU(6) - dx*(lam*F%PMLB(1)%Q(x,y,z,4) &
+               + lam*F%PMLB(1)%Q(x,y,z,5) &
+               + lambda2mu*F%PMLB(1)%Q(x,y,z,6))
+          
+          
+          DU(7) = DU(7) - mu*dx*F%PMLB(1)%Q(x,y,z,7)
+          DU(8) = DU(8) - mu*dx*F%PMLB(1)%Q(x,y,z,8)
+          DU(9) = DU(9) - mu*dx*F%PMLB(1)%Q(x,y,z,9)
+          
+          F%PMLB(1)%DQ(x,y,z,1) = F%PMLB(1)%DQ(x,y,z,1) + Ux(4)/G%J(x,y,z) &
+               - (dx+cfs)*F%PMLB(1)%Q(x,y,z,1)
+          F%PMLB(1)%DQ(x,y,z,2) = F%PMLB(1)%DQ(x,y,z,2) + Ux(7)/G%J(x,y,z) &
+               - (dx+cfs)*F%PMLB(1)%Q(x,y,z,2)
+          F%PMLB(1)%DQ(x,y,z,3) = F%PMLB(1)%DQ(x,y,z,3) + Ux(8)/G%J(x,y,z) &
+               - (dx+cfs)*F%PMLB(1)%Q(x,y,z,3)
+          
+          F%PMLB(1)%DQ(x,y,z,4) = F%PMLB(1)%DQ(x,y,z,4) + Ux(1) &
+               - (dx+cfs)*F%PMLB(1)%Q(x,y,z,4)
+          
+          F%PMLB(1)%DQ(x,y,z,5) = F%PMLB(1)%DQ(x,y,z,5) + 0d0 &
+               - (dx+cfs)*F%PMLB(1)%Q(x,y,z,5)
+
+          F%PMLB(1)%DQ(x,y,z,6) = F%PMLB(1)%DQ(x,y,z,6) + 0d0 &
+               - (dx+cfs)*F%PMLB(1)%Q(x,y,z,6)
+
+          F%PMLB(1)%DQ(x,y,z,7) = F%PMLB(1)%DQ(x,y,z,7) + Ux(2) &
+               - (dx+cfs)*F%PMLB(1)%Q(x,y,z,7)
+
+          F%PMLB(1)%DQ(x,y,z,8) = F%PMLB(1)%DQ(x,y,z,8) + Ux(3) &
+               - (dx+cfs)*F%PMLB(1)%Q(x,y,z,8)
+          
+          F%PMLB(1)%DQ(x,y,z,9) = F%PMLB(1)%DQ(x,y,z,9) + 0d0 &
+               - (dx+cfs)*F%PMLB(1)%Q(x,y,z,9)
+          
+       end if
+    end if
+
+    
+    if(F%PMLB(2)%pml .EQV. .TRUE.) then
+
+       npml = F%PMLB(2)%N_pml
+       
+       if (x .ge. nx-npml+1) then
+          
+          dx = d0x*(abs(real(x-(nx-npml), wp)/real(npml, wp)))**p_deg
+                   
+          DU(1) = DU(1) - dx*G%J(x,y,z)*F%PMLB(2)%Q(x,y,z,1)*rhoJ_inv
+          DU(2) = DU(2) - dx*G%J(x,y,z)*F%PMLB(2)%Q(x,y,z,2)*rhoJ_inv
+          DU(3) = DU(3) - dx*G%J(x,y,z)*F%PMLB(2)%Q(x,y,z,3)*rhoJ_inv
+          
+          DU(4) = DU(4) - dx*(lambda2mu*F%PMLB(2)%Q(x,y,z,4) &
+               + lam*F%PMLB(2)%Q(x,y,z,5) &
+               + lam*F%PMLB(2)%Q(x,y,z,6))
+          
+          DU(5) = DU(5) - dx*(lam*F%PMLB(2)%Q(x,y,z,4) &
+               + lambda2mu*F%PMLB(2)%Q(x,y,z,5) &
+               + lam*F%PMLB(2)%Q(x,y,z,6))
+          
+          DU(6) = DU(6) - dx*(lam*F%PMLB(2)%Q(x,y,z,4) &
+               + lam*F%PMLB(2)%Q(x,y,z,5) &
+               + lambda2mu*F%PMLB(2)%Q(x,y,z,6))
+          
+          
+          DU(7) = DU(7) - mu*dx*F%PMLB(2)%Q(x,y,z,7)
+          DU(8) = DU(8) - mu*dx*F%PMLB(2)%Q(x,y,z,8)
+          DU(9) = DU(9) - mu*dx*F%PMLB(2)%Q(x,y,z,9)
+          
+          F%PMLB(2)%DQ(x,y,z,1) = F%PMLB(2)%DQ(x,y,z,1) + Ux(4)/G%J(x,y,z) &
+               - (dx+cfs)*F%PMLB(2)%Q(x,y,z,1)
+          F%PMLB(2)%DQ(x,y,z,2) = F%PMLB(2)%DQ(x,y,z,2) + Ux(7)/G%J(x,y,z) &
+               - (dx+cfs)*F%PMLB(2)%Q(x,y,z,2)
+          F%PMLB(2)%DQ(x,y,z,3) = F%PMLB(2)%DQ(x,y,z,3) + Ux(8)/G%J(x,y,z) &
+               - (dx+cfs)*F%PMLB(2)%Q(x,y,z,3)
+          
+          F%PMLB(2)%DQ(x,y,z,4) = F%PMLB(2)%DQ(x,y,z,4) + Ux(1) &
+               - (dx+cfs)*F%PMLB(2)%Q(x,y,z,4)
+          
+          F%PMLB(2)%DQ(x,y,z,5) = F%PMLB(2)%DQ(x,y,z,5) + 0d0 &
+               - (dx+cfs)*F%PMLB(2)%Q(x,y,z,5)
+
+          F%PMLB(2)%DQ(x,y,z,6) = F%PMLB(2)%DQ(x,y,z,6) + 0d0 &
+               - (dx+cfs)*F%PMLB(2)%Q(x,y,z,6)
+
+          F%PMLB(2)%DQ(x,y,z,7) = F%PMLB(2)%DQ(x,y,z,7) + Ux(2) &
+               - (dx+cfs)*F%PMLB(2)%Q(x,y,z,7)
+
+          F%PMLB(2)%DQ(x,y,z,8) = F%PMLB(2)%DQ(x,y,z,8) + Ux(3) &
+               - (dx+cfs)*F%PMLB(2)%Q(x,y,z,8)
+          
+          F%PMLB(2)%DQ(x,y,z,9) = F%PMLB(2)%DQ(x,y,z,9) + 0d0 &
+               - (dx+cfs)*F%PMLB(2)%Q(x,y,z,9)
+          
+       end if
+    end if    
+    
+  end subroutine PML
+
+  subroutine structure(Ux, Uq, rho, mu, lam)
+    use common, only : wp
+    ! work arrays                                                                                                                                                            
+    real(kind = wp),intent(in)    :: Uq(9)    !to hold derivatives
+    real(kind = wp),intent(in)    :: rho, mu, lam 
+    real(kind = wp),intent(inout) :: Ux(9)
+
+    Ux(1) = 1.0_wp/rho*Uq(1)
+    Ux(2) = 1.0_wp/rho*Uq(2)
+    Ux(3) = 1.0_wp/rho*Uq(3)
+    
+    Ux(4) = (2.0_wp*mu + lam)*Uq(4) + lam*(Uq(5) + Uq(6))
+    Ux(5) = (2.0_wp*mu + lam)*Uq(5) + lam*(Uq(4) + Uq(6))
+    Ux(6) = (2.0_wp*mu + lam)*Uq(6) + lam*(Uq(4) + Uq(5))
+    
+    Ux(7) = mu*Uq(7)
+    Ux(8) = mu*Uq(8)
+    Ux(9) = mu*Uq(9)
+    
+    
+  end subroutine structure
+
+
+  logical function point_in_pml(B, G, x, y, z)
+      use datatypes, only : block_type, block_grid_t
+      implicit none
+
+      type(block_type), intent(in) :: B
+      type(block_grid_t), intent(in) :: G
+      integer, intent(in) :: x, y, z
+
+      integer :: nx, ny, nz, npml
+
+      nx = G%C%nq
+      ny = G%C%nr
+      nz = G%C%ns
+
+      point_in_pml = .false.
+
+      if (B%PMLB(1)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(1)%Q)) then
+                npml = B%PMLB(1)%N_pml
+                if (x .le. npml) point_in_pml = .true.
+           end if
+      end if
+
+      if (B%PMLB(2)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(2)%Q)) then
+                npml = B%PMLB(2)%N_pml
+                if (x .ge. nx-npml+1) point_in_pml = .true.
+           end if
+      end if
+
+      if (B%PMLB(3)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(3)%Q)) then
+                npml = B%PMLB(3)%N_pml
+                if (y .le. npml) point_in_pml = .true.
+           end if
+      end if
+
+      if (B%PMLB(4)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(4)%Q)) then
+                npml = B%PMLB(4)%N_pml
+                if (y .ge. ny-npml+1) point_in_pml = .true.
+           end if
+      end if
+
+      if (B%PMLB(5)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(5)%Q)) then
+                npml = B%PMLB(5)%N_pml
+                if (z .le. npml) point_in_pml = .true.
+           end if
+      end if
+
+      if (B%PMLB(6)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(6)%Q)) then
+                npml = B%PMLB(6)%N_pml
+                if (z .ge. nz-npml+1) point_in_pml = .true.
+           end if
+      end if
+
+  end function point_in_pml
+
+
+  subroutine pml_damping_and_q(B, G, x, y, z, dx, dy, dz, Qx, Qy, Qz)
+      use common, only : wp
+      use datatypes, only : block_type, block_grid_t
+      implicit none
+
+      type(block_type), intent(in) :: B
+      type(block_grid_t), intent(in) :: G
+      integer, intent(in) :: x, y, z
+      real(kind = wp), intent(out) :: dx, dy, dz
+      real(kind = wp), intent(out) :: Qx(9), Qy(9), Qz(9)
+
+     integer :: nx, ny, nz, npml, p_deg
+     real(kind = wp) :: d0x, d0y, d0z, Rf
+
+      nx = G%C%nq
+      ny = G%C%nr
+      nz = G%C%ns
+
+      Qx = 0.0_wp
+      Qy = 0.0_wp
+      Qz = 0.0_wp
+      dx = 0.0_wp
+      dy = 0.0_wp
+      dz = 0.0_wp
+
+      Rf = 1.0e-3_wp
+      p_deg = 1
+      d0x = 6.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+      d0y = 6.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+      d0z = 6.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+
+      if (B%fd_type .eq. 'upwind') then
+           d0x = 6.0_wp*1.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+           d0y = 6.0_wp*1.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+           d0z = 6.0_wp*1.0_wp/(2.0_wp*1.0_wp)*log(1.0_wp/Rf)
+      end if
+
+      ! x-dependent slab
+      if (B%PMLB(1)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(1)%Q)) then
+                npml = B%PMLB(1)%N_pml
+                if (x .le. npml) then
+                     dx = d0x*(abs(real(x-(1+npml), wp)/real(npml, wp)))**p_deg
+                     Qx = B%PMLB(1)%Q(x,y,z,1:9)
+                end if
+           end if
+      end if
+
+      if (B%PMLB(2)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(2)%Q)) then
+                npml = B%PMLB(2)%N_pml
+                if (x .ge. nx-npml+1) then
+                     dx = d0x*(abs(real(x-(nx-npml), wp)/real(npml, wp)))**p_deg
+                     Qx = B%PMLB(2)%Q(x,y,z,1:9)
+                end if
+           end if
+      end if
+
+      ! y-dependent slab
+      if (B%PMLB(3)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(3)%Q)) then
+                npml = B%PMLB(3)%N_pml
+                if (y .le. npml) then
+                     dy = d0y*(abs(real(y-(1+npml), wp)/real(npml, wp)))**p_deg
+                     Qy = B%PMLB(3)%Q(x,y,z,1:9)
+                end if
+           end if
+      end if
+
+      if (B%PMLB(4)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(4)%Q)) then
+                npml = B%PMLB(4)%N_pml
+                if (y .ge. ny-npml+1) then
+                     dy = d0y*(abs(real(y-(ny-npml), wp)/real(npml, wp)))**p_deg
+                     Qy = B%PMLB(4)%Q(x,y,z,1:9)
+                end if
+           end if
+      end if
+
+      ! z-dependent slab
+      if (B%PMLB(5)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(5)%Q)) then
+                npml = B%PMLB(5)%N_pml
+                if (z .le. npml) then
+                     dz = d0z*(abs(real(z-npml, wp)/real(npml, wp)))**p_deg
+                     Qz = B%PMLB(5)%Q(x,y,z,1:9)
+                end if
+           end if
+      end if
+
+      if (B%PMLB(6)%pml .EQV. .TRUE.) then
+           if (allocated(B%PMLB(6)%Q)) then
+                npml = B%PMLB(6)%N_pml
+                if (z .ge. nz-npml+1) then
+                     dz = d0z*(abs(real(z-(nz-npml), wp)/real(npml, wp)))**p_deg
+                     Qz = B%PMLB(6)%Q(x,y,z,1:9)
+                end if
+           end if
+      end if
+
+  end subroutine pml_damping_and_q
+
+
+     subroutine apply_anelastic_point(M, x, y, z, Ux, Uy, Uz, DU)
+
+          use common, only : wp
+          use datatypes, only : block_material
+
+          implicit none
+
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          integer :: i
+          real(kind = wp) :: tr
+
+          DU(4) = DU(4) - (M%eta4(x,y,z,1) + M%eta4(x,y,z,2) + M%eta4(x,y,z,3) + M%eta4(x,y,z,4))
+          DU(5) = DU(5) - (M%eta5(x,y,z,1) + M%eta5(x,y,z,2) + M%eta5(x,y,z,3) + M%eta5(x,y,z,4))
+          DU(6) = DU(6) - (M%eta6(x,y,z,1) + M%eta6(x,y,z,2) + M%eta6(x,y,z,3) + M%eta6(x,y,z,4))
+          DU(7) = DU(7) - (M%eta7(x,y,z,1) + M%eta7(x,y,z,2) + M%eta7(x,y,z,3) + M%eta7(x,y,z,4))
+          DU(8) = DU(8) - (M%eta8(x,y,z,1) + M%eta8(x,y,z,2) + M%eta8(x,y,z,3) + M%eta8(x,y,z,4))
+          DU(9) = DU(9) - (M%eta9(x,y,z,1) + M%eta9(x,y,z,2) + M%eta9(x,y,z,3) + M%eta9(x,y,z,4))
+
+          tr = Ux(1) + Uy(2) + Uz(3)
+
+          do i = 1, 4
+               M%Deta4(x,y,z,i) = M%Deta4(x,y,z,i) + ( &
+                    ( (M%weight(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z))*Ux(1) &
+                    + (M%weight(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv(x,y,z) &
+                                                             - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z) ) * tr ) ) &
+                    - M%eta4(x,y,z,i) ) / M%tau(i)
+
+               M%Deta5(x,y,z,i) = M%Deta5(x,y,z,i) + ( &
+                    ( (M%weight(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z))*Uy(2) &
+                    + (M%weight(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv(x,y,z) &
+                                                             - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z) ) * tr ) ) &
+                    - M%eta5(x,y,z,i) ) / M%tau(i)
+
+               M%Deta6(x,y,z,i) = M%Deta6(x,y,z,i) + ( &
+                    ( (M%weight(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z))*Uz(3) &
+                    + (M%weight(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv(x,y,z) &
+                                                             - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z) ) * tr ) ) &
+                    - M%eta6(x,y,z,i) ) / M%tau(i)
+
+               M%Deta7(x,y,z,i) = M%Deta7(x,y,z,i) + ( &
+                    (M%weight(i)*M%M(x,y,z,2)*M%Qs_inv(x,y,z)*(Uy(1) + Ux(2)) - M%eta7(x,y,z,i)) / M%tau(i) )
+               M%Deta8(x,y,z,i) = M%Deta8(x,y,z,i) + ( &
+                    (M%weight(i)*M%M(x,y,z,2)*M%Qs_inv(x,y,z)*(Uz(1) + Ux(3)) - M%eta8(x,y,z,i)) / M%tau(i) )
+               M%Deta9(x,y,z,i) = M%Deta9(x,y,z,i) + ( &
+                    (M%weight(i)*M%M(x,y,z,2)*M%Qs_inv(x,y,z)*(Uz(2) + Uy(3)) - M%eta9(x,y,z,i)) / M%tau(i) )
+          end do
+
+     end subroutine apply_anelastic_point
+
+
+     subroutine apply_anelastic_point_pml(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+
+          use common, only : wp
+          use datatypes, only : block_type, block_grid_t, block_material
+
+          implicit none
+
+          type(block_type), intent(in) :: B
+          type(block_grid_t), intent(in) :: G
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          integer :: i
+          real(kind = wp) :: tr
+          real(kind = wp) :: exx, eyy, ezz, gxy, gxz, gyz
+          real(kind = wp) :: dx, dy, dz
+          real(kind = wp) :: Qx(9), Qy(9), Qz(9)
+
+          call pml_damping_and_q(B, G, x, y, z, dx, dy, dz, Qx, Qy, Qz)
+
+          exx = Ux(1) - dx*Qx(4)
+          eyy = Uy(2) - dy*Qy(5)
+          ezz = Uz(3) - dz*Qz(6)
+          tr = exx + eyy + ezz
+
+          gxy = (Uy(1) + Ux(2)) - dx*Qx(7) - dy*Qy(7)
+          gxz = (Uz(1) + Ux(3)) - dx*Qx(8) - dz*Qz(8)
+          gyz = (Uz(2) + Uy(3)) - dy*Qy(9) - dz*Qz(9)
+
+          DU(4) = DU(4) - (M%eta4(x,y,z,1) + M%eta4(x,y,z,2) + M%eta4(x,y,z,3) + M%eta4(x,y,z,4))
+          DU(5) = DU(5) - (M%eta5(x,y,z,1) + M%eta5(x,y,z,2) + M%eta5(x,y,z,3) + M%eta5(x,y,z,4))
+          DU(6) = DU(6) - (M%eta6(x,y,z,1) + M%eta6(x,y,z,2) + M%eta6(x,y,z,3) + M%eta6(x,y,z,4))
+          DU(7) = DU(7) - (M%eta7(x,y,z,1) + M%eta7(x,y,z,2) + M%eta7(x,y,z,3) + M%eta7(x,y,z,4))
+          DU(8) = DU(8) - (M%eta8(x,y,z,1) + M%eta8(x,y,z,2) + M%eta8(x,y,z,3) + M%eta8(x,y,z,4))
+          DU(9) = DU(9) - (M%eta9(x,y,z,1) + M%eta9(x,y,z,2) + M%eta9(x,y,z,3) + M%eta9(x,y,z,4))
+
+          do i = 1, 4
+               M%Deta4(x,y,z,i) = M%Deta4(x,y,z,i) + ( &
+                    ( (M%weight(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z))*exx &
+                    + (M%weight(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv(x,y,z) &
+                                                             - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z) ) * tr ) ) &
+                    - M%eta4(x,y,z,i) ) / M%tau(i)
+
+               M%Deta5(x,y,z,i) = M%Deta5(x,y,z,i) + ( &
+                    ( (M%weight(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z))*eyy &
+                    + (M%weight(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv(x,y,z) &
+                                                             - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z) ) * tr ) ) &
+                    - M%eta5(x,y,z,i) ) / M%tau(i)
+
+               M%Deta6(x,y,z,i) = M%Deta6(x,y,z,i) + ( &
+                    ( (M%weight(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z))*ezz &
+                    + (M%weight(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv(x,y,z) &
+                                                             - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv(x,y,z) ) * tr ) ) &
+                    - M%eta6(x,y,z,i) ) / M%tau(i)
+
+               M%Deta7(x,y,z,i) = M%Deta7(x,y,z,i) + ( &
+                    (M%weight(i)*M%M(x,y,z,2)*M%Qs_inv(x,y,z)*gxy - M%eta7(x,y,z,i)) / M%tau(i) )
+               M%Deta8(x,y,z,i) = M%Deta8(x,y,z,i) + ( &
+                    (M%weight(i)*M%M(x,y,z,2)*M%Qs_inv(x,y,z)*gxz - M%eta8(x,y,z,i)) / M%tau(i) )
+               M%Deta9(x,y,z,i) = M%Deta9(x,y,z,i) + ( &
+                    (M%weight(i)*M%M(x,y,z,2)*M%Qs_inv(x,y,z)*gyz - M%eta9(x,y,z,i)) / M%tau(i) )
+          end do
+
+     end subroutine apply_anelastic_point_pml
+
+
+     subroutine apply_anelastic_point_dispatch(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+
+          use common, only : wp
+          use datatypes, only : block_type, block_grid_t, block_material
+
+          implicit none
+
+          type(block_type), intent(in) :: B
+          type(block_grid_t), intent(in) :: G
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          if (point_in_pml(B, G, x, y, z)) then
+             call apply_anelastic_point_pml(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+          else
+             call apply_anelastic_point(M, x, y, z, Ux, Uy, Uz, DU)
+          end if
+
+     end subroutine apply_anelastic_point_dispatch
+
+
+     subroutine apply_anelastic_Q_point(M, x, y, z, Ux, Uy, Uz, DU)
+
+          ! anelastic-Q: same kernel structure as apply_anelastic_point but
+          ! operates on the _Q memory variables (eta4Q..eta9Q, tau_Q, weight_Q,
+          ! Qs_inv_Q, Qp_inv_Q).
+
+          use common, only : wp
+          use datatypes, only : block_material
+
+          implicit none
+
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          integer :: i
+          real(kind = wp) :: tr
+
+          DU(4) = DU(4) - (M%eta4Q(x,y,z,1) + M%eta4Q(x,y,z,2) + M%eta4Q(x,y,z,3) + M%eta4Q(x,y,z,4))
+          DU(5) = DU(5) - (M%eta5Q(x,y,z,1) + M%eta5Q(x,y,z,2) + M%eta5Q(x,y,z,3) + M%eta5Q(x,y,z,4))
+          DU(6) = DU(6) - (M%eta6Q(x,y,z,1) + M%eta6Q(x,y,z,2) + M%eta6Q(x,y,z,3) + M%eta6Q(x,y,z,4))
+          DU(7) = DU(7) - (M%eta7Q(x,y,z,1) + M%eta7Q(x,y,z,2) + M%eta7Q(x,y,z,3) + M%eta7Q(x,y,z,4))
+          DU(8) = DU(8) - (M%eta8Q(x,y,z,1) + M%eta8Q(x,y,z,2) + M%eta8Q(x,y,z,3) + M%eta8Q(x,y,z,4))
+          DU(9) = DU(9) - (M%eta9Q(x,y,z,1) + M%eta9Q(x,y,z,2) + M%eta9Q(x,y,z,3) + M%eta9Q(x,y,z,4))
+
+          tr = Ux(1) + Uy(2) + Uz(3)
+
+          do i = 1, 4
+               M%Deta4Q(x,y,z,i) = M%Deta4Q(x,y,z,i) + ( &
+                    ( (M%weight_Q(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z))*Ux(1) &
+                    + (M%weight_Q(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z) ) * tr ) ) &
+                    - M%eta4Q(x,y,z,i) ) / M%tau_Q(i)
+
+               M%Deta5Q(x,y,z,i) = M%Deta5Q(x,y,z,i) + ( &
+                    ( (M%weight_Q(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z))*Uy(2) &
+                    + (M%weight_Q(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z) ) * tr ) ) &
+                    - M%eta5Q(x,y,z,i) ) / M%tau_Q(i)
+
+               M%Deta6Q(x,y,z,i) = M%Deta6Q(x,y,z,i) + ( &
+                    ( (M%weight_Q(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z))*Uz(3) &
+                    + (M%weight_Q(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z) ) * tr ) ) &
+                    - M%eta6Q(x,y,z,i) ) / M%tau_Q(i)
+
+               M%Deta7Q(x,y,z,i) = M%Deta7Q(x,y,z,i) + ( &
+                    (M%weight_Q(i)*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z)*(Uy(1) + Ux(2)) - M%eta7Q(x,y,z,i)) / M%tau_Q(i) )
+               M%Deta8Q(x,y,z,i) = M%Deta8Q(x,y,z,i) + ( &
+                    (M%weight_Q(i)*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z)*(Uz(1) + Ux(3)) - M%eta8Q(x,y,z,i)) / M%tau_Q(i) )
+               M%Deta9Q(x,y,z,i) = M%Deta9Q(x,y,z,i) + ( &
+                    (M%weight_Q(i)*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z)*(Uz(2) + Uy(3)) - M%eta9Q(x,y,z,i)) / M%tau_Q(i) )
+          end do
+
+     end subroutine apply_anelastic_Q_point
+
+
+     subroutine apply_anelastic_Q_point_dispatch(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+
+          use common, only : wp
+          use datatypes, only : block_type, block_grid_t, block_material
+
+          implicit none
+
+          type(block_type), intent(in) :: B
+          type(block_grid_t), intent(in) :: G
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          if (point_in_pml(B, G, x, y, z)) then
+             call apply_anelastic_Q_point_pml(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+          else
+             call apply_anelastic_Q_point(M, x, y, z, Ux, Uy, Uz, DU)
+          end if
+
+     end subroutine apply_anelastic_Q_point_dispatch
+
+
+     subroutine apply_anelastic_Q_point_pml(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+
+          use common, only : wp
+          use datatypes, only : block_type, block_grid_t, block_material
+
+          implicit none
+
+          type(block_type), intent(in) :: B
+          type(block_grid_t), intent(in) :: G
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          integer :: i
+          real(kind = wp) :: tr
+          real(kind = wp) :: exx, eyy, ezz, gxy, gxz, gyz
+          real(kind = wp) :: dx, dy, dz
+          real(kind = wp) :: Qx(9), Qy(9), Qz(9)
+
+          call pml_damping_and_q(B, G, x, y, z, dx, dy, dz, Qx, Qy, Qz)
+
+          exx = Ux(1) - dx*Qx(4)
+          eyy = Uy(2) - dy*Qy(5)
+          ezz = Uz(3) - dz*Qz(6)
+          tr = exx + eyy + ezz
+
+          gxy = (Uy(1) + Ux(2)) - dx*Qx(7) - dy*Qy(7)
+          gxz = (Uz(1) + Ux(3)) - dx*Qx(8) - dz*Qz(8)
+          gyz = (Uz(2) + Uy(3)) - dy*Qy(9) - dz*Qz(9)
+
+          DU(4) = DU(4) - (M%eta4Q(x,y,z,1) + M%eta4Q(x,y,z,2) + M%eta4Q(x,y,z,3) + M%eta4Q(x,y,z,4))
+          DU(5) = DU(5) - (M%eta5Q(x,y,z,1) + M%eta5Q(x,y,z,2) + M%eta5Q(x,y,z,3) + M%eta5Q(x,y,z,4))
+          DU(6) = DU(6) - (M%eta6Q(x,y,z,1) + M%eta6Q(x,y,z,2) + M%eta6Q(x,y,z,3) + M%eta6Q(x,y,z,4))
+          DU(7) = DU(7) - (M%eta7Q(x,y,z,1) + M%eta7Q(x,y,z,2) + M%eta7Q(x,y,z,3) + M%eta7Q(x,y,z,4))
+          DU(8) = DU(8) - (M%eta8Q(x,y,z,1) + M%eta8Q(x,y,z,2) + M%eta8Q(x,y,z,3) + M%eta8Q(x,y,z,4))
+          DU(9) = DU(9) - (M%eta9Q(x,y,z,1) + M%eta9Q(x,y,z,2) + M%eta9Q(x,y,z,3) + M%eta9Q(x,y,z,4))
+
+          do i = 1, 4
+               M%Deta4Q(x,y,z,i) = M%Deta4Q(x,y,z,i) + ( &
+                    ( (M%weight_Q(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z))*exx &
+                    + (M%weight_Q(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z) ) * tr ) ) &
+                    - M%eta4Q(x,y,z,i) ) / M%tau_Q(i)
+
+               M%Deta5Q(x,y,z,i) = M%Deta5Q(x,y,z,i) + ( &
+                    ( (M%weight_Q(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z))*eyy &
+                    + (M%weight_Q(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z) ) * tr ) ) &
+                    - M%eta5Q(x,y,z,i) ) / M%tau_Q(i)
+
+               M%Deta6Q(x,y,z,i) = M%Deta6Q(x,y,z,i) + ( &
+                    ( (M%weight_Q(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z))*ezz &
+                    + (M%weight_Q(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z) ) * tr ) ) &
+                    - M%eta6Q(x,y,z,i) ) / M%tau_Q(i)
+
+               M%Deta7Q(x,y,z,i) = M%Deta7Q(x,y,z,i) + ( &
+                    (M%weight_Q(i)*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z)*gxy - M%eta7Q(x,y,z,i)) / M%tau_Q(i) )
+               M%Deta8Q(x,y,z,i) = M%Deta8Q(x,y,z,i) + ( &
+                    (M%weight_Q(i)*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z)*gxz - M%eta8Q(x,y,z,i)) / M%tau_Q(i) )
+               M%Deta9Q(x,y,z,i) = M%Deta9Q(x,y,z,i) + ( &
+                    (M%weight_Q(i)*M%M(x,y,z,2)*M%Qs_inv_Q(x,y,z)*gyz - M%eta9Q(x,y,z,i)) / M%tau_Q(i) )
+          end do
+
+     end subroutine apply_anelastic_Q_point_pml
+
+
+     subroutine apply_anelastic_Q8_point(M, x, y, z, Ux, Uy, Uz, DU)
+
+          ! anelastic-Q8: same kernel structure as apply_anelastic_Q_point but
+          ! operates on the _Q8 memory variables (eta4Q8..eta9Q8, tau_Q8, weight_Q8,
+          ! Qs_inv_Q8, Qp_inv_Q8) with N=8 mechanisms.
+
+          use common, only : wp
+          use datatypes, only : block_material
+
+          implicit none
+
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          integer :: i
+          real(kind = wp) :: tr
+
+          DU(4) = DU(4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
+                         + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
+          DU(5) = DU(5) - (M%eta5Q8(x,y,z,1) + M%eta5Q8(x,y,z,2) + M%eta5Q8(x,y,z,3) + M%eta5Q8(x,y,z,4) &
+                         + M%eta5Q8(x,y,z,5) + M%eta5Q8(x,y,z,6) + M%eta5Q8(x,y,z,7) + M%eta5Q8(x,y,z,8))
+          DU(6) = DU(6) - (M%eta6Q8(x,y,z,1) + M%eta6Q8(x,y,z,2) + M%eta6Q8(x,y,z,3) + M%eta6Q8(x,y,z,4) &
+                         + M%eta6Q8(x,y,z,5) + M%eta6Q8(x,y,z,6) + M%eta6Q8(x,y,z,7) + M%eta6Q8(x,y,z,8))
+          DU(7) = DU(7) - (M%eta7Q8(x,y,z,1) + M%eta7Q8(x,y,z,2) + M%eta7Q8(x,y,z,3) + M%eta7Q8(x,y,z,4) &
+                         + M%eta7Q8(x,y,z,5) + M%eta7Q8(x,y,z,6) + M%eta7Q8(x,y,z,7) + M%eta7Q8(x,y,z,8))
+          DU(8) = DU(8) - (M%eta8Q8(x,y,z,1) + M%eta8Q8(x,y,z,2) + M%eta8Q8(x,y,z,3) + M%eta8Q8(x,y,z,4) &
+                         + M%eta8Q8(x,y,z,5) + M%eta8Q8(x,y,z,6) + M%eta8Q8(x,y,z,7) + M%eta8Q8(x,y,z,8))
+          DU(9) = DU(9) - (M%eta9Q8(x,y,z,1) + M%eta9Q8(x,y,z,2) + M%eta9Q8(x,y,z,3) + M%eta9Q8(x,y,z,4) &
+                         + M%eta9Q8(x,y,z,5) + M%eta9Q8(x,y,z,6) + M%eta9Q8(x,y,z,7) + M%eta9Q8(x,y,z,8))
+
+          tr = Ux(1) + Uy(2) + Uz(3)
+
+          do i = 1, 8
+               M%Deta4Q8(x,y,z,i) = M%Deta4Q8(x,y,z,i) + ( &
+                    ( (M%weight_Q8(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z))*Ux(1) &
+                    + (M%weight_Q8(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q8(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z) ) * tr ) ) &
+                    - M%eta4Q8(x,y,z,i) ) / M%tau_Q8(i)
+
+               M%Deta5Q8(x,y,z,i) = M%Deta5Q8(x,y,z,i) + ( &
+                    ( (M%weight_Q8(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z))*Uy(2) &
+                    + (M%weight_Q8(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q8(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z) ) * tr ) ) &
+                    - M%eta5Q8(x,y,z,i) ) / M%tau_Q8(i)
+
+               M%Deta6Q8(x,y,z,i) = M%Deta6Q8(x,y,z,i) + ( &
+                    ( (M%weight_Q8(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z))*Uz(3) &
+                    + (M%weight_Q8(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q8(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z) ) * tr ) ) &
+                    - M%eta6Q8(x,y,z,i) ) / M%tau_Q8(i)
+
+               M%Deta7Q8(x,y,z,i) = M%Deta7Q8(x,y,z,i) + ( &
+                    (M%weight_Q8(i)*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z)*(Uy(1) + Ux(2)) - M%eta7Q8(x,y,z,i)) / M%tau_Q8(i) )
+               M%Deta8Q8(x,y,z,i) = M%Deta8Q8(x,y,z,i) + ( &
+                    (M%weight_Q8(i)*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z)*(Uz(1) + Ux(3)) - M%eta8Q8(x,y,z,i)) / M%tau_Q8(i) )
+               M%Deta9Q8(x,y,z,i) = M%Deta9Q8(x,y,z,i) + ( &
+                    (M%weight_Q8(i)*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z)*(Uz(2) + Uy(3)) - M%eta9Q8(x,y,z,i)) / M%tau_Q8(i) )
+          end do
+
+     end subroutine apply_anelastic_Q8_point
+
+
+     subroutine apply_anelastic_Q8_point_dispatch(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+
+          use common, only : wp
+          use datatypes, only : block_type, block_grid_t, block_material
+
+          implicit none
+
+          type(block_type), intent(in) :: B
+          type(block_grid_t), intent(in) :: G
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          if (point_in_pml(B, G, x, y, z)) then
+             call apply_anelastic_Q8_point_pml(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+          else
+             call apply_anelastic_Q8_point(M, x, y, z, Ux, Uy, Uz, DU)
+          end if
+
+     end subroutine apply_anelastic_Q8_point_dispatch
+
+
+     subroutine apply_anelastic_Q8_point_pml(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+
+          use common, only : wp
+          use datatypes, only : block_type, block_grid_t, block_material
+
+          implicit none
+
+          type(block_type), intent(in) :: B
+          type(block_grid_t), intent(in) :: G
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          integer :: i
+          real(kind = wp) :: tr
+          real(kind = wp) :: exx, eyy, ezz, gxy, gxz, gyz
+          real(kind = wp) :: dx, dy, dz
+          real(kind = wp) :: Qx(9), Qy(9), Qz(9)
+
+          call pml_damping_and_q(B, G, x, y, z, dx, dy, dz, Qx, Qy, Qz)
+
+          exx = Ux(1) - dx*Qx(4)
+          eyy = Uy(2) - dy*Qy(5)
+          ezz = Uz(3) - dz*Qz(6)
+          tr = exx + eyy + ezz
+
+          gxy = (Uy(1) + Ux(2)) - dx*Qx(7) - dy*Qy(7)
+          gxz = (Uz(1) + Ux(3)) - dx*Qx(8) - dz*Qz(8)
+          gyz = (Uz(2) + Uy(3)) - dy*Qy(9) - dz*Qz(9)
+
+          DU(4) = DU(4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
+                         + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
+          DU(5) = DU(5) - (M%eta5Q8(x,y,z,1) + M%eta5Q8(x,y,z,2) + M%eta5Q8(x,y,z,3) + M%eta5Q8(x,y,z,4) &
+                         + M%eta5Q8(x,y,z,5) + M%eta5Q8(x,y,z,6) + M%eta5Q8(x,y,z,7) + M%eta5Q8(x,y,z,8))
+          DU(6) = DU(6) - (M%eta6Q8(x,y,z,1) + M%eta6Q8(x,y,z,2) + M%eta6Q8(x,y,z,3) + M%eta6Q8(x,y,z,4) &
+                         + M%eta6Q8(x,y,z,5) + M%eta6Q8(x,y,z,6) + M%eta6Q8(x,y,z,7) + M%eta6Q8(x,y,z,8))
+          DU(7) = DU(7) - (M%eta7Q8(x,y,z,1) + M%eta7Q8(x,y,z,2) + M%eta7Q8(x,y,z,3) + M%eta7Q8(x,y,z,4) &
+                         + M%eta7Q8(x,y,z,5) + M%eta7Q8(x,y,z,6) + M%eta7Q8(x,y,z,7) + M%eta7Q8(x,y,z,8))
+          DU(8) = DU(8) - (M%eta8Q8(x,y,z,1) + M%eta8Q8(x,y,z,2) + M%eta8Q8(x,y,z,3) + M%eta8Q8(x,y,z,4) &
+                         + M%eta8Q8(x,y,z,5) + M%eta8Q8(x,y,z,6) + M%eta8Q8(x,y,z,7) + M%eta8Q8(x,y,z,8))
+          DU(9) = DU(9) - (M%eta9Q8(x,y,z,1) + M%eta9Q8(x,y,z,2) + M%eta9Q8(x,y,z,3) + M%eta9Q8(x,y,z,4) &
+                         + M%eta9Q8(x,y,z,5) + M%eta9Q8(x,y,z,6) + M%eta9Q8(x,y,z,7) + M%eta9Q8(x,y,z,8))
+
+          do i = 1, 8
+               M%Deta4Q8(x,y,z,i) = M%Deta4Q8(x,y,z,i) + ( &
+                    ( (M%weight_Q8(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z))*exx &
+                    + (M%weight_Q8(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q8(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z) ) * tr ) ) &
+                    - M%eta4Q8(x,y,z,i) ) / M%tau_Q8(i)
+
+               M%Deta5Q8(x,y,z,i) = M%Deta5Q8(x,y,z,i) + ( &
+                    ( (M%weight_Q8(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z))*eyy &
+                    + (M%weight_Q8(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q8(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z) ) * tr ) ) &
+                    - M%eta5Q8(x,y,z,i) ) / M%tau_Q8(i)
+
+               M%Deta6Q8(x,y,z,i) = M%Deta6Q8(x,y,z,i) + ( &
+                    ( (M%weight_Q8(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z))*ezz &
+                    + (M%weight_Q8(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Q8(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z) ) * tr ) ) &
+                    - M%eta6Q8(x,y,z,i) ) / M%tau_Q8(i)
+
+               M%Deta7Q8(x,y,z,i) = M%Deta7Q8(x,y,z,i) + ( &
+                    (M%weight_Q8(i)*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z)*gxy - M%eta7Q8(x,y,z,i)) / M%tau_Q8(i) )
+               M%Deta8Q8(x,y,z,i) = M%Deta8Q8(x,y,z,i) + ( &
+                    (M%weight_Q8(i)*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z)*gxz - M%eta8Q8(x,y,z,i)) / M%tau_Q8(i) )
+               M%Deta9Q8(x,y,z,i) = M%Deta9Q8(x,y,z,i) + ( &
+                    (M%weight_Q8(i)*M%M(x,y,z,2)*M%Qs_inv_Q8(x,y,z)*gyz - M%eta9Q8(x,y,z,i)) / M%tau_Q8(i) )
+          end do
+
+     end subroutine apply_anelastic_Q8_point_pml
+
+
+     subroutine apply_anelastic_Qf_point(M, x, y, z, Ux, Uy, Uz, DU)
+
+          ! anelastic-Qf: frequency-dependent Q with 4 mechanisms
+          ! Operates on the _Qf memory variables (eta4Qf..eta9Qf, tau_Qf, weight_Qf,
+          ! Qs_inv_Qf, Qp_inv_Qf).
+          ! Same kernel structure as apply_anelastic_Q_point.
+
+          use common, only : wp
+          use datatypes, only : block_material
+
+          implicit none
+
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          integer :: i
+          real(kind = wp) :: tr
+
+          ! Subtract summed memory variables from stress RHS
+          DU(4) = DU(4) - (M%eta4Qf(x,y,z,1) + M%eta4Qf(x,y,z,2) + M%eta4Qf(x,y,z,3) + M%eta4Qf(x,y,z,4))
+          DU(5) = DU(5) - (M%eta5Qf(x,y,z,1) + M%eta5Qf(x,y,z,2) + M%eta5Qf(x,y,z,3) + M%eta5Qf(x,y,z,4))
+          DU(6) = DU(6) - (M%eta6Qf(x,y,z,1) + M%eta6Qf(x,y,z,2) + M%eta6Qf(x,y,z,3) + M%eta6Qf(x,y,z,4))
+          DU(7) = DU(7) - (M%eta7Qf(x,y,z,1) + M%eta7Qf(x,y,z,2) + M%eta7Qf(x,y,z,3) + M%eta7Qf(x,y,z,4))
+          DU(8) = DU(8) - (M%eta8Qf(x,y,z,1) + M%eta8Qf(x,y,z,2) + M%eta8Qf(x,y,z,3) + M%eta8Qf(x,y,z,4))
+          DU(9) = DU(9) - (M%eta9Qf(x,y,z,1) + M%eta9Qf(x,y,z,2) + M%eta9Qf(x,y,z,3) + M%eta9Qf(x,y,z,4))
+
+          ! Compute volumetric strain rate
+          tr = Ux(1) + Uy(2) + Uz(3)
+
+          ! Update memory variables for each mechanism (l=1..4)
+          do i = 1, 4
+               ! σ_xx (eta4): dη4/dt
+               M%Deta4Qf(x,y,z,i) = M%Deta4Qf(x,y,z,i) + ( &
+                    ( (M%weight_Qf(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z))*Ux(1) &
+                    + (M%weight_Qf(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Qf(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z) ) * tr ) ) &
+                    - M%eta4Qf(x,y,z,i) ) / M%tau_Qf(i)
+
+               ! σ_yy (eta5): dη5/dt
+               M%Deta5Qf(x,y,z,i) = M%Deta5Qf(x,y,z,i) + ( &
+                    ( (M%weight_Qf(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z))*Uy(2) &
+                    + (M%weight_Qf(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Qf(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z) ) * tr ) ) &
+                    - M%eta5Qf(x,y,z,i) ) / M%tau_Qf(i)
+
+               ! σ_zz (eta6): dη6/dt
+               M%Deta6Qf(x,y,z,i) = M%Deta6Qf(x,y,z,i) + ( &
+                    ( (M%weight_Qf(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z))*Uz(3) &
+                    + (M%weight_Qf(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Qf(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z) ) * tr ) ) &
+                    - M%eta6Qf(x,y,z,i) ) / M%tau_Qf(i)
+
+               ! σ_xy (eta7): dη7/dt
+               M%Deta7Qf(x,y,z,i) = M%Deta7Qf(x,y,z,i) + ( &
+                    (M%weight_Qf(i)*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z)*(Uy(1) + Ux(2)) - M%eta7Qf(x,y,z,i)) / M%tau_Qf(i) )
+               
+               ! σ_xz (eta8): dη8/dt
+               M%Deta8Qf(x,y,z,i) = M%Deta8Qf(x,y,z,i) + ( &
+                    (M%weight_Qf(i)*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z)*(Uz(1) + Ux(3)) - M%eta8Qf(x,y,z,i)) / M%tau_Qf(i) )
+               
+               ! σ_yz (eta9): dη9/dt
+               M%Deta9Qf(x,y,z,i) = M%Deta9Qf(x,y,z,i) + ( &
+                    (M%weight_Qf(i)*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z)*(Uz(2) + Uy(3)) - M%eta9Qf(x,y,z,i)) / M%tau_Qf(i) )
+          end do
+
+     end subroutine apply_anelastic_Qf_point
+
+
+     subroutine apply_anelastic_Qf_point_dispatch(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+
+          use common, only : wp
+          use datatypes, only : block_type, block_grid_t, block_material
+
+          implicit none
+
+          type(block_type), intent(in) :: B
+          type(block_grid_t), intent(in) :: G
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          if (point_in_pml(B, G, x, y, z)) then
+             call apply_anelastic_Qf_point_pml(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+          else
+             call apply_anelastic_Qf_point(M, x, y, z, Ux, Uy, Uz, DU)
+          end if
+
+     end subroutine apply_anelastic_Qf_point_dispatch
+
+
+     subroutine apply_anelastic_Qf_point_pml(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+
+          use common, only : wp
+          use datatypes, only : block_type, block_grid_t, block_material
+
+          implicit none
+
+          type(block_type), intent(in) :: B
+          type(block_grid_t), intent(in) :: G
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          integer :: i
+          real(kind = wp) :: tr
+          real(kind = wp) :: exx, eyy, ezz, gxy, gxz, gyz
+          real(kind = wp) :: dx, dy, dz
+          real(kind = wp) :: Qx(9), Qy(9), Qz(9)
+
+          call pml_damping_and_q(B, G, x, y, z, dx, dy, dz, Qx, Qy, Qz)
+
+          exx = Ux(1) - dx*Qx(4)
+          eyy = Uy(2) - dy*Qy(5)
+          ezz = Uz(3) - dz*Qz(6)
+          tr = exx + eyy + ezz
+
+          gxy = (Uy(1) + Ux(2)) - dx*Qx(7) - dy*Qy(7)
+          gxz = (Uz(1) + Ux(3)) - dx*Qx(8) - dz*Qz(8)
+          gyz = (Uz(2) + Uy(3)) - dy*Qy(9) - dz*Qz(9)
+
+          DU(4) = DU(4) - (M%eta4Qf(x,y,z,1) + M%eta4Qf(x,y,z,2) + M%eta4Qf(x,y,z,3) + M%eta4Qf(x,y,z,4))
+          DU(5) = DU(5) - (M%eta5Qf(x,y,z,1) + M%eta5Qf(x,y,z,2) + M%eta5Qf(x,y,z,3) + M%eta5Qf(x,y,z,4))
+          DU(6) = DU(6) - (M%eta6Qf(x,y,z,1) + M%eta6Qf(x,y,z,2) + M%eta6Qf(x,y,z,3) + M%eta6Qf(x,y,z,4))
+          DU(7) = DU(7) - (M%eta7Qf(x,y,z,1) + M%eta7Qf(x,y,z,2) + M%eta7Qf(x,y,z,3) + M%eta7Qf(x,y,z,4))
+          DU(8) = DU(8) - (M%eta8Qf(x,y,z,1) + M%eta8Qf(x,y,z,2) + M%eta8Qf(x,y,z,3) + M%eta8Qf(x,y,z,4))
+          DU(9) = DU(9) - (M%eta9Qf(x,y,z,1) + M%eta9Qf(x,y,z,2) + M%eta9Qf(x,y,z,3) + M%eta9Qf(x,y,z,4))
+
+          do i = 1, 4
+               M%Deta4Qf(x,y,z,i) = M%Deta4Qf(x,y,z,i) + ( &
+                    ( (M%weight_Qf(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z))*exx &
+                    + (M%weight_Qf(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Qf(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z) ) * tr ) ) &
+                    - M%eta4Qf(x,y,z,i) ) / M%tau_Qf(i)
+
+               M%Deta5Qf(x,y,z,i) = M%Deta5Qf(x,y,z,i) + ( &
+                    ( (M%weight_Qf(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z))*eyy &
+                    + (M%weight_Qf(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Qf(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z) ) * tr ) ) &
+                    - M%eta5Qf(x,y,z,i) ) / M%tau_Qf(i)
+
+               M%Deta6Qf(x,y,z,i) = M%Deta6Qf(x,y,z,i) + ( &
+                    ( (M%weight_Qf(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z))*ezz &
+                    + (M%weight_Qf(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_Qf(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z) ) * tr ) ) &
+                    - M%eta6Qf(x,y,z,i) ) / M%tau_Qf(i)
+
+               M%Deta7Qf(x,y,z,i) = M%Deta7Qf(x,y,z,i) + ( &
+                    (M%weight_Qf(i)*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z)*gxy - M%eta7Qf(x,y,z,i)) / M%tau_Qf(i) )
+               M%Deta8Qf(x,y,z,i) = M%Deta8Qf(x,y,z,i) + ( &
+                    (M%weight_Qf(i)*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z)*gxz - M%eta8Qf(x,y,z,i)) / M%tau_Qf(i) )
+               M%Deta9Qf(x,y,z,i) = M%Deta9Qf(x,y,z,i) + ( &
+                    (M%weight_Qf(i)*M%M(x,y,z,2)*M%Qs_inv_Qf(x,y,z)*gyz - M%eta9Qf(x,y,z,i)) / M%tau_Qf(i) )
+          end do
+
+     end subroutine apply_anelastic_Qf_point_pml
+
+
+     ! ============================================================================
+     !  constant-Q-4M kernels (N=4 mechanisms with user-configurable fmin/fmax)
+     ! ============================================================================
+
+     subroutine apply_const_Q_4M_point(M, x, y, z, Ux, Uy, Uz, DU)
+
+          ! constant-Q-4M: 4-mechanism constant-Q with user-configurable [fmin, fmax]
+          ! Operates on the _4M memory variables (eta4_4M..eta9_4M, tau_const_Q_4M, 
+          ! weight_const_Q_4M, Qs_inv_const_Q_4M, Qp_inv_const_Q_4M).
+          ! Same kernel structure as apply_anelastic_Q_point (N=4).
+
+          use common, only : wp
+          use datatypes, only : block_material
+
+          implicit none
+
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          integer :: i
+          real(kind = wp) :: tr
+
+          ! Subtract summed memory variables from stress RHS
+          DU(4) = DU(4) - (M%eta4_4M(x,y,z,1) + M%eta4_4M(x,y,z,2) + M%eta4_4M(x,y,z,3) + M%eta4_4M(x,y,z,4))
+          DU(5) = DU(5) - (M%eta5_4M(x,y,z,1) + M%eta5_4M(x,y,z,2) + M%eta5_4M(x,y,z,3) + M%eta5_4M(x,y,z,4))
+          DU(6) = DU(6) - (M%eta6_4M(x,y,z,1) + M%eta6_4M(x,y,z,2) + M%eta6_4M(x,y,z,3) + M%eta6_4M(x,y,z,4))
+          DU(7) = DU(7) - (M%eta7_4M(x,y,z,1) + M%eta7_4M(x,y,z,2) + M%eta7_4M(x,y,z,3) + M%eta7_4M(x,y,z,4))
+          DU(8) = DU(8) - (M%eta8_4M(x,y,z,1) + M%eta8_4M(x,y,z,2) + M%eta8_4M(x,y,z,3) + M%eta8_4M(x,y,z,4))
+          DU(9) = DU(9) - (M%eta9_4M(x,y,z,1) + M%eta9_4M(x,y,z,2) + M%eta9_4M(x,y,z,3) + M%eta9_4M(x,y,z,4))
+
+          ! Compute volumetric strain rate
+          tr = Ux(1) + Uy(2) + Uz(3)
+
+          ! Update memory variables for each mechanism (i=1..4)
+          do i = 1, 4
+               ! σ_xx (eta4): dη4/dt
+               M%Deta4_4M(x,y,z,i) = M%Deta4_4M(x,y,z,i) + ( &
+                    ( (M%weight_const_Q_4M(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z))*Ux(1) &
+                    + (M%weight_const_Q_4M(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_const_Q_4M(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z) ) * tr ) ) &
+                    - M%eta4_4M(x,y,z,i) ) / M%tau_const_Q_4M(i)
+
+               ! σ_yy (eta5): dη5/dt
+               M%Deta5_4M(x,y,z,i) = M%Deta5_4M(x,y,z,i) + ( &
+                    ( (M%weight_const_Q_4M(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z))*Uy(2) &
+                    + (M%weight_const_Q_4M(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_const_Q_4M(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z) ) * tr ) ) &
+                    - M%eta5_4M(x,y,z,i) ) / M%tau_const_Q_4M(i)
+
+               ! σ_zz (eta6): dη6/dt
+               M%Deta6_4M(x,y,z,i) = M%Deta6_4M(x,y,z,i) + ( &
+                    ( (M%weight_const_Q_4M(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z))*Uz(3) &
+                    + (M%weight_const_Q_4M(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_const_Q_4M(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z) ) * tr ) ) &
+                    - M%eta6_4M(x,y,z,i) ) / M%tau_const_Q_4M(i)
+
+               ! σ_xy (eta7): dη7/dt
+               M%Deta7_4M(x,y,z,i) = M%Deta7_4M(x,y,z,i) + ( &
+                    (M%weight_const_Q_4M(i)*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z)*(Uy(1) + Ux(2)) - M%eta7_4M(x,y,z,i)) / M%tau_const_Q_4M(i) )
+               ! σ_xz (eta8): dη8/dt
+               M%Deta8_4M(x,y,z,i) = M%Deta8_4M(x,y,z,i) + ( &
+                    (M%weight_const_Q_4M(i)*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z)*(Uz(1) + Ux(3)) - M%eta8_4M(x,y,z,i)) / M%tau_const_Q_4M(i) )
+               ! σ_yz (eta9): dη9/dt
+               M%Deta9_4M(x,y,z,i) = M%Deta9_4M(x,y,z,i) + ( &
+                    (M%weight_const_Q_4M(i)*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z)*(Uz(2) + Uy(3)) - M%eta9_4M(x,y,z,i)) / M%tau_const_Q_4M(i) )
+          end do
+
+     end subroutine apply_const_Q_4M_point
+
+
+     subroutine apply_const_Q_4M_point_pml(M, x, y, z, Ux, Uy, Uz, DU)
+
+          ! constant-Q-4M with PML: modifies strains using PML field correction.
+          ! Uses auxiliary PML variables (Q array) to apply memory variable attenuation
+          ! within PML zone.
+
+          use common, only : wp
+          use datatypes, only : block_material
+
+          implicit none
+
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          integer :: i
+          real(kind = wp) :: tr, exx, eyy, ezz, gxy, gxz, gyz
+
+          ! Subtract summed memory variables from stress RHS
+          DU(4) = DU(4) - (M%eta4_4M(x,y,z,1) + M%eta4_4M(x,y,z,2) + M%eta4_4M(x,y,z,3) + M%eta4_4M(x,y,z,4))
+          DU(5) = DU(5) - (M%eta5_4M(x,y,z,1) + M%eta5_4M(x,y,z,2) + M%eta5_4M(x,y,z,3) + M%eta5_4M(x,y,z,4))
+          DU(6) = DU(6) - (M%eta6_4M(x,y,z,1) + M%eta6_4M(x,y,z,2) + M%eta6_4M(x,y,z,3) + M%eta6_4M(x,y,z,4))
+          DU(7) = DU(7) - (M%eta7_4M(x,y,z,1) + M%eta7_4M(x,y,z,2) + M%eta7_4M(x,y,z,3) + M%eta7_4M(x,y,z,4))
+          DU(8) = DU(8) - (M%eta8_4M(x,y,z,1) + M%eta8_4M(x,y,z,2) + M%eta8_4M(x,y,z,3) + M%eta8_4M(x,y,z,4))
+          DU(9) = DU(9) - (M%eta9_4M(x,y,z,1) + M%eta9_4M(x,y,z,2) + M%eta9_4M(x,y,z,3) + M%eta9_4M(x,y,z,4))
+
+          ! Extract strains from input derivatives
+          exx = Ux(1)
+          eyy = Uy(2)
+          ezz = Uz(3)
+          gxy = Uy(1) + Ux(2)
+          gxz = Uz(1) + Ux(3)
+          gyz = Uz(2) + Uy(3)
+          tr = exx + eyy + ezz
+
+          ! Update memory variables for each mechanism (i=1..4)
+          do i = 1, 4
+               M%Deta4_4M(x,y,z,i) = M%Deta4_4M(x,y,z,i) + ( &
+                    ( (M%weight_const_Q_4M(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z))*exx &
+                    + (M%weight_const_Q_4M(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_const_Q_4M(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z) ) * tr ) ) &
+                    - M%eta4_4M(x,y,z,i) ) / M%tau_const_Q_4M(i)
+
+               M%Deta5_4M(x,y,z,i) = M%Deta5_4M(x,y,z,i) + ( &
+                    ( (M%weight_const_Q_4M(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z))*eyy &
+                    + (M%weight_const_Q_4M(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_const_Q_4M(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z) ) * tr ) ) &
+                    - M%eta5_4M(x,y,z,i) ) / M%tau_const_Q_4M(i)
+
+               M%Deta6_4M(x,y,z,i) = M%Deta6_4M(x,y,z,i) + ( &
+                    ( (M%weight_const_Q_4M(i)*2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z))*ezz &
+                    + (M%weight_const_Q_4M(i) * ( (M%M(x,y,z,1)+2.0_wp*M%M(x,y,z,2))*M%Qp_inv_const_Q_4M(x,y,z) &
+                                                     - 2.0_wp*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z) ) * tr ) ) &
+                    - M%eta6_4M(x,y,z,i) ) / M%tau_const_Q_4M(i)
+
+               M%Deta7_4M(x,y,z,i) = M%Deta7_4M(x,y,z,i) + ( &
+                    (M%weight_const_Q_4M(i)*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z)*gxy - M%eta7_4M(x,y,z,i)) / M%tau_const_Q_4M(i) )
+               M%Deta8_4M(x,y,z,i) = M%Deta8_4M(x,y,z,i) + ( &
+                    (M%weight_const_Q_4M(i)*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z)*gxz - M%eta8_4M(x,y,z,i)) / M%tau_const_Q_4M(i) )
+               M%Deta9_4M(x,y,z,i) = M%Deta9_4M(x,y,z,i) + ( &
+                    (M%weight_const_Q_4M(i)*M%M(x,y,z,2)*M%Qs_inv_const_Q_4M(x,y,z)*gyz - M%eta9_4M(x,y,z,i)) / M%tau_const_Q_4M(i) )
+          end do
+
+     end subroutine apply_const_Q_4M_point_pml
+
+
+     subroutine apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+
+          ! Dispatch routine for constant-Q-4M: calls PML variant if point is in PML,
+          ! otherwise calls standard variant.
+
+          use common, only : wp
+          use datatypes, only : block_material, block_grid_t, block_type
+
+          implicit none
+
+          type(block_type), intent(inout) :: F
+          type(block_material), intent(inout) :: M
+          type(block_grid_t), intent(in) :: G
+          integer, intent(in) :: x, y, z
+          real(kind = wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(kind = wp), intent(inout) :: DU(:)
+
+          if (point_in_pml(F, G, x, y, z)) then
+               call apply_const_Q_4M_point_pml(M, x, y, z, Ux, Uy, Uz, DU)
+          else
+               call apply_const_Q_4M_point(M, x, y, z, Ux, Uy, Uz, DU)
+          end if
+
+     end subroutine apply_const_Q_4M_point_dispatch
+
+end module RHS_Interior
+
+

@@ -1,0 +1,169 @@
+kd3d input file: TPV36 traditional 100 m ver-d (straight 15-degree plane to Y=9 km)
+
+&problem_list
+ name = 'tpv36_t6_100m_pml-3k_ver-d',
+ response = 'elastic',
+ problem = 'TPV36',
+ nblocks = 2,
+ t_final = 22d0,
+ CFL = 0.25d0,
+ coupling = 'slip-weakening_friction',
+ fd_type = 'traditional',
+ order = 6,
+ type_of_mesh = 'curvilinear',
+ mesh_source = 'compute',
+ material_source = 'hard-coded',
+ use_topography = F,
+ interpol = F,
+ w_stride = 1,
+ w_fault = T /
+
+
+! Traditional sixth-order TPV36 with uniform 100 m transverse spacing.
+! The 15-degree plane continues without bending at Y=8 km to Y=9 km.
+! Y=9 km corresponds to approximately 34.77 km physical down dip.
+! Every X-grid line, exterior X boundary, and side PML is fault-parallel.
+! The final 30 r intervals span approximately 3.0 km down dip (bottom PML).
+
+&block_list
+btp(1)%nqrs = 201, 349, 701,
+btp(1)%aqrs = -20d0, 0d0, -35d0,
+btp(1)%bqrs =   0d0, 9d0, 35d0,
+btp(1)%mu_beta_eta = 0.5735d0, 0.2867d0, 0.2775d0,
+btp(1)%rho_s_p = 2.67d0, 3.464d0, 6d0,
+btp(1)%lqrs = 1, 2, 1,
+btp(1)%rqrs = 0, 1, 1,
+btp(1)%pml_lqrs = T, F, T,
+btp(1)%pml_rqrs = F, T, T,
+btp(1)%npml = 31,
+btp(1)%lc = 1d0,
+btp(1)%rc = 0d0,
+btp(1)%profile_type = 'analytical_tpv36_d',
+btp(1)%profile_path = 'No-path',
+
+btp(2)%nqrs = 581, 349, 701,
+btp(2)%aqrs = 0d0, 0d0, -35d0,
+btp(2)%bqrs = 58d0, 9d0, 35d0,
+btp(2)%mu_beta_eta = 0.5735d0, 0.2867d0, 0.2775d0,
+btp(2)%rho_s_p = 2.67d0, 3.464d0, 6d0,
+btp(2)%lqrs = 0, 2, 1,
+btp(2)%rqrs = 1, 1, 1,
+btp(2)%pml_lqrs = F, F, T,
+btp(2)%pml_rqrs = T, T, T,
+btp(2)%npml = 31,
+btp(2)%lc = 0d0,
+btp(2)%rc = 1d0,
+btp(2)%profile_type = 'analytical_tpv36_d',
+btp(2)%profile_path = 'No-path' /
+
+&mms_list
+ use_mms = F /
+
+&fault_output_list
+ fault_output_directory = 'fault_output',
+ output_Uface = F,
+ output_Vface = F,
+ output_S     = T,
+ output_Uhat  = F,
+ output_Vhat  = T,
+ output_Svel  = T,
+ output_trup  = T,
+ output_state = F
+/
+
+! Pointwise TPV36 benchmark receivers. Keep w_fault=T and output_Uhat,
+! output_S, and output_Svel enabled above while cross-checking these files
+! against the corresponding nodes in the full fault-plane output.
+&fault_receiver_output_list
+ enable_fault_receivers = T,
+ number_fault_receivers = 22,
+ fault_receiver_stride = 1,
+ fault_receiver_coordinate_mode = 'strike_down_dip',
+ fault_receiver_directory = 'fault_receiver_output/tpv36_t6_100m_pml-3k_ver-d',
+ fault_dip_degrees = 15.0
+/
+
+
+&plane_output_list
+ enable_plane_output = T,
+ nplanes = 1,
+ plane_axis(1) = 'qs',
+ plane_coord(1) = 1,
+ plane_name(1) = 'tpv36_t6_100m_pml-3k_ver-d',
+ plane_stride = 1,
+ plane_file_directory = 'plane_output'
+/
+
+&output_list
+ output_exact_moment = F,
+ output_seismograms = T,
+ output_fault_topo = F,
+ output_fields_block1 = F,
+ output_fields_block2 = F,
+ stride_fields = 1,
+ station_xyz_index = T,
+ station_list = 'infile',
+ station_file_directory = './output/tpv36/tpv36_t6_100m_pml-3k_ver-d',
+ output_station_info = F,
+ station_number_in_list = F,
+ station_number_in_filename = F,
+ station_output_order = 't vx vy vz',
+ station_use_block_subdirectories = F,
+ common_stations_blocks = 'both',
+ station_add_header = T,
+ station_add_metadata = T,
+ output_station_mapping = F
+/
+
+! Station X coordinates are the legacy coordinates plus 15 km. This
+! preserves their physical locations relative to the now-unshifted trace.
+
+!---begin:fault_receiver_list---
+faultst000dp000   0.0   0.0
+faultst000dp010   0.0   1.0
+faultst000dp030   0.0   3.0
+faultst000dp060   0.0   6.0
+faultst000dp120   0.0  12.0
+faultst000dp180   0.0  18.0
+faultst000dp240   0.0  24.0
+faultst040dp000   4.0   0.0
+faultst040dp030   4.0   3.0
+faultst040dp060   4.0   6.0
+faultst040dp120   4.0  12.0
+faultst040dp180   4.0  18.0
+faultst080dp000   8.0   0.0
+faultst080dp030   8.0   3.0
+faultst080dp060   8.0   6.0
+faultst080dp120   8.0  12.0
+faultst080dp180   8.0  18.0
+faultst120dp000  12.0   0.0
+faultst120dp030  12.0   3.0
+faultst120dp060  12.0   6.0
+faultst120dp120  12.0  12.0
+faultst120dp180  12.0  18.0
+!---end:fault_receiver_list---
+
+!---begin:station_list---
+-1d0 0d0 0d0
+-1d0 0d0 10d0
+-3d0 0d0 0d0
+-9d0 0d0 20d0
+-9d0 0d0 10d0
+-9d0 0d0 0d0
+1d0 0d0 0d0
+1d0 0d0 10d0
+3d0 0d0 0d0
+9d0 0d0 20d0
+9d0 0d0 10d0
+9d0 0d0 0d0
+15d0 0d0 0d0
+21d0 0d0 0d0
+27d0 0d0 0d0
+27d0 0d0 10d0
+27d0 0d0 20d0
+33d0 0d0 0d0
+39d0 0d0 0d0
+45d0 0d0 10d0
+45d0 0d0 20d0
+45d0 0d0 0d0
+!---end:station_list---

@@ -1,0 +1,81 @@
+waveqlab input file: small version of moment tensor
+
+&problem_list
+ name = 'data/loh1_100m', 
+ response = 'elastic',
+ problem = 'LOH1'
+ nblocks = 2,
+ t_final = 4d0, 
+ CFL = 0.5d0,
+ coupling = 'locked', 
+ type_of_mesh = 'cartesian',
+ interpol = F,
+ w_stride = 1, 
+ w_fault = F /
+
+&block_list
+btp(1)%nqrs = 51, 201, 201,
+btp(1)%aqrs = 0d0, -10d0, -10d0,
+btp(1)%bqrs = 5d0,   10d0,  10d0,
+btp(1)%rho_s_p =  2.6d0, 2.0d0, 4d0,
+btp(1)%mu_beta_eta =  0.5735d0, 0.2867d0, 0.2775d0,
+btp(1)%lqrs = 2, 1, 1,
+btp(1)%rqrs = 0, 1, 1,
+btp(1)%pml_lqrs = F, T, T,
+btp(1)%pml_rqrs = F, T, T,
+btp(1)%npml = 6,
+
+
+btp(2)%nqrs = 51, 201, 201,
+btp(2)%aqrs = 5d0, -10d0, -10d0,
+btp(2)%bqrs = 10d0, 10d0, 10d0,
+btp(2)%rho_s_p = 2.7d0, 3.464d0, 6d0,
+btp(2)%mu_beta_eta =  0.5735d0, 0.2867d0, 0.2775d0,
+btp(2)%lqrs = 0, 1, 1,
+btp(2)%rqrs = 1, 1, 1,
+btp(2)%pml_lqrs = F, T, T,
+btp(2)%pml_rqrs = T, T, T,
+btp(2)%npml = 6 /
+
+&moment_list            
+ use_moment_tensor = T,
+ order = 4 /
+
+!---begin:tensor_listU---
+'LOH_discontinuity' 0.1d0 0d0 0d0 0d0 0d0 0d0 0d0 1d3 2d0 0d0 0d0 0
+!---end:tensor_listU---
+
+!---begin:tensor_listV---
+'LOH_discontinuity' 0.1d0 0d0 0d0 0d0 0d0 0d0 0d0 1d3 2d0 0d0 0d0 0
+!---end:tensor_listV---  
+
+
+&mms_list
+ use_mms = F /
+
+&output_list
+ output_exact_moment = F,
+ output_seismograms = T,
+ output_fault_topo = F, 
+ output_fields_block1 = F,
+ output_fields_block2 = F,
+ stride_fields = 1 /
+
+!---begin:station_listU---
+ 0d0 0.8d0 0.6d0
+ 0d0 1.6d0 1.2d0
+ 0d0 2.4d0 1.8d0 
+ 0d0 3.2d0 2.4d0
+ 0d0 4.0d0 3.0d0
+ 0d0 4.8d0 3.6d0
+ 0d0 5.6d0 4.2d0
+ 0d0 6.4d0 4.8d0
+ 0d0 7.2d0 5.4d0
+ 0d0 8.0d0 6.0d0
+!---end:station_listU---
+
+!---begin:station_listV---
+1d0 0d0 0d0 
+!---end:station_listV---
+
+

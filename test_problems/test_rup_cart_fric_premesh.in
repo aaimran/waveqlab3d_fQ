@@ -1,0 +1,49 @@
+! waveqlab3d input file: test problem for mms on cartesian grid with friction
+
+&problem_list
+ name = 'data/test_rup_cart_fric',
+ problem = 'TPV5',
+ nblocks = 2,
+ t_final = 0.5d0,
+ CFL = 0.5d0,
+ coupling='slip-weakening_friction',
+ mesh_source = 'file',
+ type_of_mesh='cartesian',
+ w_stride = 1,
+ w_fault = T /
+
+&block_list
+btp(1)%nqrs = 21, 21, 21,
+btp(1)%aqrs = -3d0, 6d0, -1.5d0,
+btp(1)%bqrs = 0d0, 9d0, 1.5d0,
+btp(1)%rho_s_p = 2.67d0, 3.464d0, 6d0,
+btp(1)%lqrs = 1, 2, 1,
+btp(1)%rqrs = 0, 1, 1,
+
+btp(2)%nqrs = 21, 21, 21,
+btp(2)%aqrs = 0d0, 6d0, -1.5d0,
+btp(2)%bqrs = 3d0, 9d0, 1.5d0,
+btp(2)%rho_s_p = 2.67d0, 3.464d0, 6d0,
+btp(2)%lqrs = 0, 2, 1,
+btp(2)%rqrs = 1, 1, 1 /
+
+&moment_tensor_list
+ use_moment_tensor = F /
+
+&mms_list
+ use_mms = F /
+
+&output_list
+ output_seismograms = T,
+ output_fault_topo = T, 
+ output_fields_block1 = F,
+ output_fields_block2 = F,
+ stride_fields = 1 /
+
+!---begin:station_listU---
+ -0d0 7.5d0 0d0
+!---end:station_listU---
+
+!---begin:station_listV---
+ 0d0 7.5d0 0d0
+!---end:station_listV---
