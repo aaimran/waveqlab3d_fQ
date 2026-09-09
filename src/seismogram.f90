@@ -8,7 +8,7 @@ module seismogram
 contains
 
 
-  subroutine init_seismogram(input,S,name,G)
+  subroutine init_seismogram(input,S,name,G,nblocks)
 
     use diagnostics, only : fatal_local
 
@@ -18,8 +18,10 @@ contains
     type(block_grid_t), intent(in) :: G
     type(seismogram_type),intent(inout) :: S
     character(*),intent(in) :: name
+    integer, intent(in) :: nblocks
 
       integer :: mx,my,mz,px,py,pz
+      logical :: on_interface
       logical :: output_exact_moment
 
       logical :: output_seismograms,output_fault_topo,output_fields_block1,output_fields_block2
@@ -105,18 +107,8 @@ contains
     select case (trim(interface_stations))
     case ('block_1_2')
        S%append_block = .true.
-    case ('block_1')
+    case ('block_1', 'block_2')
        S%append_block = append_block
-       if (S%block_num /= 1) then
-          S%output_seismograms = .false.
-          S%output_exact_moment = .false.
-       end if
-    case ('block_2')
-       S%append_block = append_block
-       if (S%block_num /= 2) then
-          S%output_seismograms = .false.
-          S%output_exact_moment = .false.
-       end if
     case default
        write(*,'(A,A,A)') 'error: invalid interface_stations "', &
             trim(interface_stations), &
@@ -380,6 +372,25 @@ contains
        call Find_Coordinates(G%X, S%i_phys, S%j_phys, S%k_phys, &
             S%i, S%j, S%k, S%nstations, mx, my, mz, px, py, pz, &
             output_station_mapping)
+
+       if (nblocks == 2 .and. trim(interface_stations) /= 'block_1_2') then
+          do n = 1, S%nstations
+             if (S%i(n) > 0 .and. S%j(n) > 0 .and. S%k(n) > 0) then
+                on_interface = .false.
+                if (S%block_num == 1 .and. S%i(n) == px .and. px == G%C%nq) &
+                     on_interface = .true.
+                if (S%block_num == 2 .and. S%i(n) == mx .and. mx == 1) &
+                     on_interface = .true.
+                if (on_interface) then
+                   if (trim(interface_stations) == 'block_1' .and. S%block_num /= 1) then
+                      S%i(n) = -1; S%j(n) = -1; S%k(n) = -1
+                   else if (trim(interface_stations) == 'block_2' .and. S%block_num /= 2) then
+                      S%i(n) = -1; S%j(n) = -1; S%k(n) = -1
+                   end if
+                end if
+             end if
+          end do
+       end if
 
        ! open file units for output
 

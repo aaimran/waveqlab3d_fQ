@@ -18,7 +18,7 @@
 | `station_number_in_list` | logical | F | Station rows include a station number column |
 | `station_number_in_filename` | logical | F | Include station number in output filenames |
 | `station_use_block_subdirectories` | logical | F | Separate output dirs per block |
-| `interface_stations` | string | `'block_1_2'` | Which block(s) output interface stations: `block_1`, `block_2`, `block_1_2` |
+| `interface_stations` | string | `'block_1_2'` | For stations on the interface rs-plane only: output from `block_1`, `block_2`, or `block_1_2`. Non-interface stations always output from their block |
 | `append_block` | logical | F | Append `_blockN` to output filenames. Forced T when `interface_stations='block_1_2'` |
 | `station_add_header` | logical | F | Add header line to seismogram files |
 | `station_add_metadata` | logical | F | Add metadata to seismogram files |

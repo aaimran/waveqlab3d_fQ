@@ -322,7 +322,7 @@ contains
     ! Initialize seismometers and plane outputs for each block (generalized for 1 or 2 blocks)
     do i = 1, D%nblocks
       D%seismometers(i)%block_num = i
-      if (in_block_comm(i)) call init_seismogram(infile, D%seismometers(i), D%name, D%B(i)%G)
+      if (in_block_comm(i)) call init_seismogram(infile, D%seismometers(i), D%name, D%B(i)%G, D%nblocks)
       if (in_block_comm(i)) call init_plane_output(infile, D%name, D%plane_outputs(i), D%B(i)%G, i)
     end do
     
