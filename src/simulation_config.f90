@@ -25,6 +25,7 @@ module simulation_config
      integer :: order = 5
      integer :: w_stride = 1
      real(wp) :: CFL = 0.5_wp
+     real(wp) :: dt = -1.0_wp
      real(wp) :: t_final = 0.0_wp
      real(wp) :: topo = 1.0_wp
      logical :: w_fault = .true.

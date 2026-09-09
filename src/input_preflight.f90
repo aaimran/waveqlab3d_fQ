@@ -32,7 +32,7 @@ contains
     integer :: nblocks, nt, order, w_stride
     integer :: stride_fields
     integer :: infile, stat, ierr, world_rank, world_size
-    real(wp) :: CFL, t_final, topo
+    real(wp) :: CFL, dt, t_final, topo
     logical :: w_fault, interpol, use_topography, mollify_source, valid
     logical :: use_moment_tensor
     integer :: mt_order
@@ -46,7 +46,7 @@ contains
     logical :: append_block
 
     namelist /problem_list/ name, problem, response, plastic_model, nblocks, &
-         nt, CFL, coupling, fd_type, order, t_final, mesh_source, type_of_mesh, &
+         nt, CFL, dt, coupling, fd_type, order, t_final, mesh_source, type_of_mesh, &
          material_source, interpol, w_stride, w_fault, use_topography, topo, &
          mollify_source
     namelist /block_list/ btp
@@ -64,7 +64,7 @@ contains
 
     if (world_rank == 0) then
        call set_problem_defaults(name, problem, response, plastic_model, nblocks, &
-            nt, CFL, coupling, fd_type, order, t_final, mesh_source, type_of_mesh, &
+            nt, CFL, dt, coupling, fd_type, order, t_final, mesh_source, type_of_mesh, &
             material_source, interpol, w_stride, w_fault, use_topography, topo, &
             mollify_source)
        call set_output_defaults(output_exact_moment, output_seismograms, &
@@ -250,6 +250,7 @@ contains
           config%problem%order = order
           config%problem%w_stride = w_stride
           config%problem%CFL = CFL
+          config%problem%dt = dt
           config%problem%t_final = t_final
           config%problem%topo = topo
           config%problem%w_fault = w_fault
@@ -453,6 +454,17 @@ contains
     end select
 
     dt_limit = min(elastic_limit, relaxation_limit)
+
+    if (config%problem%dt > 0.0_wp) then
+       write(*,'(/,A)') 'WARNING: manual dt override active'
+       if (config%problem%dt > dt_limit) then
+          write(*,'(A,ES24.16E3,A,ES24.16E3)') &
+               '  WARNING: manual dt ', config%problem%dt, &
+               ' exceeds stability limit ', dt_limit
+       end if
+       dt_limit = config%problem%dt
+    end if
+
     nt = floor(config%problem%t_final/dt_limit)
     covered_time = real(nt, kind=wp)*dt_limit
 
@@ -464,7 +476,11 @@ contains
          ' (block ', limiting_block, ')'
     if (relaxation_limit < huge(1.0_wp)) &
          write(*,'(A,ES24.16E3)') '  relaxation limit: ', relaxation_limit
-    write(*,'(A,ES24.16E3)') '  selected dt: ', dt_limit
+    if (config%problem%dt > 0.0_wp) then
+       write(*,'(A,ES24.16E3,A)') '  selected dt: ', dt_limit, ' (MANUAL OVERRIDE)'
+    else
+       write(*,'(A,ES24.16E3)') '  selected dt: ', dt_limit
+    end if
     write(*,'(A,I0)') '  number of time steps: ', nt
     write(*,'(A,ES24.16E3)') '  time reached after nt steps: ', covered_time
     write(*,'(A,ES24.16E3)') '  remainder to requested final time: ', &
@@ -473,16 +489,16 @@ contains
 
 
   subroutine set_problem_defaults(name, problem, response, plastic_model, nblocks, &
-       nt, CFL, coupling, fd_type, order, t_final, mesh_source, type_of_mesh, &
+       nt, CFL, dt, coupling, fd_type, order, t_final, mesh_source, type_of_mesh, &
        material_source, interpol, w_stride, w_fault, use_topography, topo, mollify_source)
     character(*), intent(out) :: name, problem, response, plastic_model
     character(*), intent(out) :: coupling, fd_type, mesh_source, type_of_mesh, material_source
     integer, intent(out) :: nblocks, nt, order, w_stride
-    real(wp), intent(out) :: CFL, t_final, topo
+    real(wp), intent(out) :: CFL, dt, t_final, topo
     logical, intent(out) :: interpol, w_fault, use_topography, mollify_source
 
     name='default'; problem='TPV5'; response='elastic'; plastic_model='default'
-    nblocks=2; nt=0; CFL=0.5_wp; coupling='locked'; fd_type='traditional'
+    nblocks=2; nt=0; CFL=0.5_wp; dt=-1.0_wp; coupling='locked'; fd_type='traditional'
     order=5; t_final=0.0_wp; mesh_source='compute'; type_of_mesh='cartesian'
     material_source='hardcode'; interpol=.false.; w_stride=1; w_fault=.true.
     use_topography=.false.; topo=1.0_wp; mollify_source=.false.

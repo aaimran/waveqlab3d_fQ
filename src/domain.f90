@@ -180,7 +180,12 @@ contains
        relaxation_dt_limit = fq8_relaxation_dt_limit(config%fq8)
        dtmin = min(dtmin, relaxation_dt_limit)
      end if
-     D%dt = dtmin
+     if (config%problem%dt > 0.0_wp) then
+        D%dt = config%problem%dt
+        if (is_master()) write(*,'(A,ES14.6E3)') 'Using manual dt override: ', D%dt
+     else
+        D%dt = dtmin
+     end if
 
         if (is_master()) call warning('warning: current method for setting time step does not use material properties; ' // &
           'mesh information from files is ignored (only scalars from btp%... in input file are used)', 'init_domain')
@@ -241,7 +246,7 @@ contains
     end do
 
 
-    D%nt = floor(D%t_final/dtmin)
+    D%nt = floor(D%t_final/D%dt)
    
     if (is_master()) then
       write (*,*) name  
