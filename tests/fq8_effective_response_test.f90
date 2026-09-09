@@ -79,7 +79,7 @@ program fq8_effective_response_test
   parameters%coefficient_method='withers-2015'
   parameters%coarse_grain=0
   call build_fq8_coefficients(parameters,tau,strength_s,strength_p,status,message)
-  if (status == 0) error stop 'coarse_grain=0 accepted raw withers-2015 coefficients'
+  if (status /= 0) error stop 'coarse_grain=0 with withers-2015 should succeed'
 
   write(*,'(A)') 'fq8 effective-response test passed'
 
@@ -139,7 +139,7 @@ contains
     rewind(unit)
     call read_fq8_parameters(unit,parsed,status,message)
     close(unit)
-    if (status == 0) error stop 'parser accepted coarse_grain=0 with withers-2015'
+    if (status /= 0) error stop 'parser should accept coarse_grain=0 with withers-2015'
 
     open(newunit=unit,status='scratch',action='readwrite')
     write(unit,'(A)') '&anelastic_fQ8_list'

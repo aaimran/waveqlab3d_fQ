@@ -194,9 +194,8 @@ contains
              if (stat /= 0) then
                 call issues%add(DIAG_ERROR, 'CFG-FQ8-001', trim(iomsg), &
                      section='anelastic_fQ8_list', &
-                     suggestion='Use coarse_grain=2 with coefficient_method=''withers-2015'', '// &
-                     'or use coarse_grain=0 with coefficient_method=''conventional-nnls''; '// &
-                     'also provide Qs0/Qp0 >= 15 and valid gamma/frequencies.')
+                     suggestion='Provide Qs0/Qp0 >= 15, gamma in [0,0.9], '// &
+                     'positive f_transition and fref, and coarse_grain 0 or 2.')
              else
                 config%has_fq8 = .true.
              end if

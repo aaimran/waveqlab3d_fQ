@@ -83,12 +83,6 @@ contains
        message='anelastic-fQ8 coarse_grain must be 0 or 2'
        return
     end if
-    if (coarse_grain == 0 .and. coefficient_method == 'withers-2015') then
-       status=1
-       message='anelastic-fQ8 coarse_grain=0 requires coefficient_method=conventional-nnls; '// &
-            'raw withers-2015 strengths are for the 2x2x2 coarse layout'
-       return
-    end if
     if (.not.ieee_is_finite(Qs0) .or. .not.ieee_is_finite(Qp0) .or. &
         Qs0 < fq8_minimum_q .or. Qp0 < fq8_minimum_q) then
        status=1; message='anelastic-fQ8 requires finite Qs0 and Qp0 >= 15'; return
@@ -115,12 +109,6 @@ contains
          strength_p(fq8_nmechanisms)
     integer, intent(out) :: status
     character(len=*), intent(out) :: message
-    if (parameters%coarse_grain == 0 .and. parameters%coefficient_method == 'withers-2015') then
-       status=1
-       message='anelastic-fQ8 coarse_grain=0 requires coefficient_method=conventional-nnls; '// &
-            'raw withers-2015 strengths are for the 2x2x2 coarse layout'
-       return
-    end if
     call get_relaxation_times(parameters%gamma,tau)
     tau=tau/parameters%f_transition
     if (parameters%coefficient_method == 'conventional-nnls') then

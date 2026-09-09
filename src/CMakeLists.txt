@@ -330,14 +330,6 @@ add_test(NAME fq8_benchmark_powerlaw
     -D STATE_LABEL=fQ8
     -P ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/run_q8_dynamic_regression.cmake)
 
-add_test(NAME fq8_rejects_full_withers
-  COMMAND ${CMAKE_COMMAND}
-    -D MPIEXEC=${WQL3D_MPI_RUNNER}
-    -D NPROCS=2
-    -D EXE=$<TARGET_FILE:waveqlab3d>
-    -D INPUT=${CMAKE_CURRENT_SOURCE_DIR}/../inputfile/test_anelastic_fQ8_invalid_full_withers.in
-    -D EXPECTED_CODE=CFG-FQ8-001
-    -P ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/run_expected_preflight_failure.cmake)
 
 add_test(NAME mt_source_too_close_to_boundary
   COMMAND ${CMAKE_COMMAND}
