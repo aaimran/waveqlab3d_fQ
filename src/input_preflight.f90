@@ -42,7 +42,8 @@ contains
     logical :: station_number_in_list, station_number_in_filename
     logical :: station_use_block_subdirectories, station_add_header, station_add_metadata
     character(len=256) :: station_list, station_list_file, station_file_directory
-    character(len=256) :: station_output_order, common_stations_blocks
+    character(len=256) :: station_output_order, interface_stations
+    logical :: append_block
 
     namelist /problem_list/ name, problem, response, plastic_model, nblocks, &
          nt, CFL, coupling, fd_type, order, t_final, mesh_source, type_of_mesh, &
@@ -54,7 +55,8 @@ contains
          output_fields_block2, stride_fields, station_xyz_index, station_list, &
          station_list_file, station_file_directory, station_output_order, &
          station_number_in_list, station_number_in_filename, &
-         station_use_block_subdirectories, common_stations_blocks, &
+         station_use_block_subdirectories, interface_stations, &
+         append_block, &
          station_add_header, station_add_metadata
 
     call MPI_Comm_rank(MPI_COMM_WORLD, world_rank, ierr)
@@ -71,7 +73,7 @@ contains
             station_xyz_index, station_list, station_list_file, &
             station_file_directory, station_output_order, station_number_in_list, &
             station_number_in_filename, station_use_block_subdirectories, &
-            common_stations_blocks, station_add_header, station_add_metadata)
+            interface_stations, append_block, station_add_header, station_add_metadata)
 
        open(newunit=infile, file=filename, status='old', action='read', &
             iostat=stat, iomsg=iomsg)
@@ -271,18 +273,18 @@ contains
        output_fields_block1, output_fields_block2, stride_fields, station_xyz_index, &
        station_list, station_list_file, station_file_directory, station_output_order, &
        station_number_in_list, station_number_in_filename, &
-       station_use_block_subdirectories, common_stations_blocks, station_add_header, &
-       station_add_metadata)
+       station_use_block_subdirectories, interface_stations, append_block, &
+       station_add_header, station_add_metadata)
     logical, intent(out) :: output_exact_moment, output_seismograms
     logical, intent(out) :: output_station_info, output_station_mapping, output_fault_topo
     logical, intent(out) :: output_fields_block1, output_fields_block2, station_xyz_index
     logical, intent(out) :: station_number_in_list, station_number_in_filename
     logical, intent(out) :: station_use_block_subdirectories, station_add_header
-    logical, intent(out) :: station_add_metadata
+    logical, intent(out) :: station_add_metadata, append_block
     integer, intent(out) :: stride_fields
     character(*), intent(out) :: station_list, station_list_file
     character(*), intent(out) :: station_file_directory, station_output_order
-    character(*), intent(out) :: common_stations_blocks
+    character(*), intent(out) :: interface_stations
 
     output_exact_moment = .false.; output_seismograms = .false.
     output_station_info = .true.; output_station_mapping = .true.
@@ -291,8 +293,8 @@ contains
     station_list = 'infile'; station_list_file = ''; station_file_directory = 'seismogram'
     station_output_order = 't vx vy vz'; station_number_in_list = .false.
     station_number_in_filename = .false.; station_use_block_subdirectories = .true.
-    common_stations_blocks = 'both'; station_add_header = .false.
-    station_add_metadata = .false.
+    interface_stations = 'block_1_2'; append_block = .false.
+    station_add_header = .false.; station_add_metadata = .false.
   end subroutine set_output_defaults
 
 

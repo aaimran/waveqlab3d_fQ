@@ -41,7 +41,8 @@ contains
       character(256) :: station_list, station_list_file
       character(256) :: station_file_directory
       character(256) :: station_output_order
-      character(256) :: common_stations_blocks
+      character(256) :: interface_stations
+      logical :: append_block
       character(256) :: station_info_lines(15)
       character(512) :: filepath
       character(512) :: block_output_directory
@@ -54,8 +55,8 @@ contains
                      output_fields_block1,output_fields_block2,stride_fields,station_xyz_index, &
                      station_list, station_list_file, station_file_directory, station_output_order, &
                      station_number_in_list, station_number_in_filename, &
-                     station_use_block_subdirectories, common_stations_blocks, &
-                     station_add_header, station_add_metadata
+                     station_use_block_subdirectories, interface_stations, &
+                     append_block, station_add_header, station_add_metadata
 
     mx = G%C%mq
     my = G%C%mr
@@ -81,7 +82,8 @@ contains
       station_number_in_list = .false.
       station_number_in_filename = .false.
       station_use_block_subdirectories = .true.
-      common_stations_blocks = 'both'
+      interface_stations = 'block_1_2'
+      append_block = .false.
       station_add_header = .false.
       station_add_metadata = .false.
 
@@ -99,27 +101,27 @@ contains
     S%station_number_in_list = station_number_in_list
     S%station_number_in_filename = station_number_in_filename
     S%station_use_block_subdirectories = station_use_block_subdirectories
-    common_stations_blocks = trim(adjustl(lower_text(common_stations_blocks)))
-    select case (trim(common_stations_blocks))
-    case ('both')
-       S%station_both_blocks = .true.
-    case ('block1')
-       S%station_both_blocks = .false.
+    interface_stations = trim(adjustl(lower_text(interface_stations)))
+    select case (trim(interface_stations))
+    case ('block_1_2')
+       S%append_block = .true.
+    case ('block_1')
+       S%append_block = append_block
        if (S%block_num /= 1) then
           S%output_seismograms = .false.
           S%output_exact_moment = .false.
        end if
-    case ('block2')
-       S%station_both_blocks = .false.
+    case ('block_2')
+       S%append_block = append_block
        if (S%block_num /= 2) then
           S%output_seismograms = .false.
           S%output_exact_moment = .false.
        end if
     case default
-       write(*,'(A,A,A)') 'error: invalid common_stations_blocks "', &
-            trim(common_stations_blocks), &
-            '"; expected block1, block2, or both'
-       error stop 'invalid common_stations_blocks'
+       write(*,'(A,A,A)') 'error: invalid interface_stations "', &
+            trim(interface_stations), &
+            '"; expected block_1, block_2, or block_1_2'
+       error stop 'invalid interface_stations'
     end select
     if (station_number_in_filename .and. .not.station_number_in_list) then
        error stop 'station_number_in_filename requires station_number_in_list'
@@ -270,13 +272,14 @@ contains
                merge('T','F',S%station_number_in_filename)
           station_info_lines(9) = 'station_use_block_subdirectories: ' // &
                merge('T','F',S%station_use_block_subdirectories)
-          station_info_lines(10) = 'common_stations_blocks: ' // &
-               trim(common_stations_blocks)
-          station_info_lines(11) = 'station_add_header: ' // merge('T','F',station_add_header)
-          station_info_lines(12) = 'station_add_metadata: ' // merge('T','F',station_add_metadata)
-          station_info_lines(13) = 'output_station_mapping: ' // merge('T','F',output_station_mapping)
-          write(station_info_lines(14),'(a,i0)') 'nstations (this block): ', S%nstations
-          call boxed_lines(14, station_info_lines(1:14), 78)
+          station_info_lines(10) = 'interface_stations: ' // &
+               trim(interface_stations)
+          station_info_lines(11) = 'append_block: ' // merge('T','F',S%append_block)
+          station_info_lines(12) = 'station_add_header: ' // merge('T','F',station_add_header)
+          station_info_lines(13) = 'station_add_metadata: ' // merge('T','F',station_add_metadata)
+          station_info_lines(14) = 'output_station_mapping: ' // merge('T','F',output_station_mapping)
+          write(station_info_lines(15),'(a,i0)') 'nstations (this block): ', S%nstations
+          call boxed_lines(15, station_info_lines(1:15), 78)
        end if
 
        ! allocate station indices array and output file unit array
@@ -385,19 +388,17 @@ contains
             if (S%station_number_in_filename) then
                write(filename,'(a,i0,a)') trim(adjustl(name)) // '_station-', &
                     S%station_number(n), '.dat'
+               if (S%append_block) call append_block_suffix(filename, S%block_num)
             else if (S%station_xyz_index) then
                write(xs,'(f20.3)') S%i_phys(n)
                write(ys,'(f20.3)') S%j_phys(n)
                write(zs,'(f20.3)') S%k_phys(n)
                write(filename,'(a,a,a,a,a,a)') trim(adjustl(name)) // '_', &
                     trim(adjustl(xs)),'_',trim(adjustl(ys)),'_',trim(adjustl(zs))//'.dat'
+               if (S%append_block) call append_block_suffix(filename, S%block_num)
             else
                write(filename,'(a,i0,a,i0,a,i0,a,i0,a)') trim(adjustl(name)) // '_', &
                     S%i(n),'_',S%j(n),'_',S%k(n),'_block',S%block_num,'.dat'
-            end if
-            if (S%station_both_blocks .and. &
-                (S%station_number_in_filename .or. S%station_xyz_index)) then
-               call append_block_suffix(filename, S%block_num)
             end if
             filepath = trim(station_output_directory) // '/' // trim(filename)
             open(newunit=S%file_unit(n),file=trim(filepath))
@@ -414,19 +415,17 @@ contains
             if (S%station_number_in_filename) then
                write(filename,'(a,i0,a)') trim(adjustl(name)) // '_exact_station-', &
                     S%station_number(n), '.dat'
+               if (S%append_block) call append_block_suffix(filename, S%block_num)
             else if (S%station_xyz_index) then
                write(xs,'(f20.3)') S%i_phys(n)
                write(ys,'(f20.3)') S%j_phys(n)
                write(zs,'(f20.3)') S%k_phys(n)
                write(filename,'(a,a,a,a,a,a)') trim(adjustl(name)) // '_exact_', &
                     trim(adjustl(xs)),'_',trim(adjustl(ys)),'_',trim(adjustl(zs))//'.dat'
+               if (S%append_block) call append_block_suffix(filename, S%block_num)
             else
                write(filename,'(a,i0,a,i0,a,i0,a,i0,a)') trim(adjustl(name)) // '_exact_', &
                     S%i(n),'_',S%j(n),'_',S%k(n),'_block',S%block_num,'.dat'
-            end if
-            if (S%station_both_blocks .and. &
-                (S%station_number_in_filename .or. S%station_xyz_index)) then
-               call append_block_suffix(filename, S%block_num)
             end if
             filepath = trim(station_output_directory) // '/' // trim(filename)
             open(newunit=S%file_unit(S%nstations+n),file=trim(filepath))

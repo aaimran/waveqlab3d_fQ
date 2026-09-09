@@ -109,14 +109,15 @@ block:
     &output_list
       output_seismograms = T,
       station_use_block_subdirectories = F,
-      common_stations_blocks = 'both'
+      interface_stations = 'block_1_2',
+      append_block = F
     /
 
-`common_stations_blocks` accepts `block1`, `block2`, or `both` and defaults to `both`.
-`station_use_block_subdirectories` defaults to true. When `both` is selected,
-station files that use physical coordinates or station numbers in their names
-receive a `_block1` or `_block2` suffix, preventing common-plane stations from
-overwriting one another.
+`interface_stations` controls which block(s) output stations on the interface:
+`block_1`, `block_2`, or `block_1_2` (default). When `block_1_2` is selected,
+`append_block` is forced to true, adding a `_blockN` suffix to filenames.
+`append_block` can also be set independently for single-block output modes.
+`station_use_block_subdirectories` defaults to true.
 
 Optional commented headers and station metadata can be written at the start of
 each station `.dat` file:
