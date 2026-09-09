@@ -2,6 +2,7 @@ module JU_xJU_yJU_z6
 
     use common, only : wp
     use anelastic_cq_material, only : apply_anelastic_cq_strain
+    use viscoelastic_material, only : apply_viscoelastic_strain
   implicit none
 
 contains
@@ -16387,6 +16388,7 @@ Ju_x(1:n) = (1.0_wp/hx)*Jq_xU(1:n) + (1.0_wp/hy)*Jr_xU(1:n) + (1.0_wp/hz)*Js_xU(
                                               end do
                                         end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                               F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                          + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -16599,6 +16601,7 @@ Ju_x(1:n) = (1.0_wp/hx)*Jq_xU(1:n) + (1.0_wp/hy)*Jr_xU(1:n) + (1.0_wp/hz)*Js_xU(
                                               end do
                                         end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                               F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                          + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -16907,6 +16910,7 @@ Ju_x(1:n) = (1.0_wp/hx)*Jq_xU(1:n) + (1.0_wp/hy)*Jr_xU(1:n) + (1.0_wp/hz)*Js_xU(
                     end do
                  end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                     F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -17063,6 +17067,7 @@ Ju_x(1:n) = (1.0_wp/hx)*Jq_xU(1:n) + (1.0_wp/hy)*Jr_xU(1:n) + (1.0_wp/hz)*Js_xU(
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -17290,6 +17295,7 @@ Ju_x(1:n) = (1.0_wp/hx)*Jq_xU(1:n) + (1.0_wp/hy)*Jr_xU(1:n) + (1.0_wp/hz)*Js_xU(
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -17601,6 +17607,7 @@ Ju_x(1:n) = (1.0_wp/hx)*Jq_xU(1:n) + (1.0_wp/hy)*Jr_xU(1:n) + (1.0_wp/hz)*Js_xU(
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -17828,6 +17835,7 @@ Ju_x(1:n) = (1.0_wp/hx)*Jq_xU(1:n) + (1.0_wp/hy)*Jr_xU(1:n) + (1.0_wp/hz)*Js_xU(
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -18141,6 +18149,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -18368,6 +18377,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -18696,6 +18706,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                           end do
                  end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                           F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                      + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -18923,6 +18934,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                           end do
                  end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                           F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                      + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -19254,6 +19266,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                          end do
                 end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                          F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                     + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -19481,6 +19494,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                          end do
                 end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                          F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                     + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -19795,6 +19809,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -20022,6 +20037,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -20340,6 +20356,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -20567,6 +20584,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -20884,6 +20902,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -21107,6 +21126,7 @@ subroutine JJU_x4_interior_upwind(F, G, M, type_of_mesh)
                     end do
                  end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                     F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -21422,6 +21442,7 @@ case('curvilinear') ! locked or welded interface
                end do
             end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                           + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -21649,6 +21670,7 @@ case('cartesian') ! carteian mesh
                end do
             end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                           + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -21962,6 +21984,7 @@ do z = mz, pz
             end do
          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
             F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                        + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -22181,6 +22204,7 @@ do z = mz, pz
             end do
          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
             F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                        + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -22491,6 +22515,7 @@ do z = mz, pz
             end do
          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
             F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                        + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -22710,6 +22735,7 @@ do z = mz, pz
             end do
          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
             F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                        + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -23026,6 +23052,7 @@ end select
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -23250,6 +23277,7 @@ end select
                     end do
                  end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                     F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -23565,6 +23593,7 @@ end select
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -23793,6 +23822,7 @@ end select
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -24111,6 +24141,7 @@ end select
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -24496,6 +24527,7 @@ end select
                                                   end do
                                          end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                                                   F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                                              + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))
@@ -24719,6 +24751,7 @@ end select
                     end do
                  end if
                                         if (M%anelastic_cQ) call apply_anelastic_cq_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
+                                        if (M%viscoelastic) call apply_viscoelastic_strain(M,x,y,z,DFx,DFy,DFz,F%F%DF(x,y,z,:))
                                         if (M%anelastic_Q8) then
                     F%F%DF(x, y, z, 4) = F%F%DF(x, y, z, 4) - (M%eta4Q8(x,y,z,1) + M%eta4Q8(x,y,z,2) + M%eta4Q8(x,y,z,3) + M%eta4Q8(x,y,z,4) &
                                                                + M%eta4Q8(x,y,z,5) + M%eta4Q8(x,y,z,6) + M%eta4Q8(x,y,z,7) + M%eta4Q8(x,y,z,8))

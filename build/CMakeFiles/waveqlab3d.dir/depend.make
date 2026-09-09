@@ -39,6 +39,7 @@ CMakeFiles/waveqlab3d.dir/JU_xJU_yJU_z6.f90.o: CMakeFiles/waveqlab3d.dir/anelast
 CMakeFiles/waveqlab3d.dir/JU_xJU_yJU_z6.f90.o: CMakeFiles/waveqlab3d.dir/common.mod.stamp
 CMakeFiles/waveqlab3d.dir/JU_xJU_yJU_z6.f90.o: CMakeFiles/waveqlab3d.dir/datatypes.mod.stamp
 CMakeFiles/waveqlab3d.dir/JU_xJU_yJU_z6.f90.o: CMakeFiles/waveqlab3d.dir/metrics.mod.stamp
+CMakeFiles/waveqlab3d.dir/JU_xJU_yJU_z6.f90.o: CMakeFiles/waveqlab3d.dir/viscoelastic_material.mod.stamp
 CMakeFiles/waveqlab3d.dir/JU_xJU_yJU_z6.f90.o.provides.build: CMakeFiles/waveqlab3d.dir/ju_xju_yju_z6.mod.stamp
 CMakeFiles/waveqlab3d.dir/ju_xju_yju_z6.mod.stamp: CMakeFiles/waveqlab3d.dir/JU_xJU_yJU_z6.f90.o
 	$(CMAKE_COMMAND) -E cmake_copy_f90_mod ju_xju_yju_z6.mod CMakeFiles/waveqlab3d.dir/ju_xju_yju_z6.mod.stamp GNU

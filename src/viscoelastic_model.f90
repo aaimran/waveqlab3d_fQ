@@ -146,8 +146,9 @@ contains
     case ('withers-method')
        ! works for any n_mechanisms and attenuation
     case ('fixed-q50')
-       if (attenuation /= 'constant-Q') then
-          status = 1; message = 'fixed-q50 requires attenuation = constant-Q'; return
+       if (attenuation /= 'constant-Q' .and. &
+           .not.(attenuation == 'frequency-Q' .and. abs(gamma) < 1.0e-12_wp)) then
+          status = 1; message = 'fixed-q50 requires constant-Q (or frequency-Q with gamma=0)'; return
        end if
        if (n_mechanisms /= 4 .and. n_mechanisms /= 8) then
           status = 1; message = 'fixed-q50 requires n_mechanisms = 4 or 8'; return
