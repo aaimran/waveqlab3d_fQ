@@ -62,12 +62,15 @@ btp(2)%profile_path='~/waveqlab3d/inputfile/a1_100m_extended.dat' /
  use_mms = F /
 
 &output_list
- output_exact_moment = F,
- output_seismograms = T,
- output_fault_topo = F, 
- output_fields_block1 = F,
- output_fields_block2 = F,
- stride_fields = 1 /
+ output_exact_moment=F,
+ output_fault_topo=F,
+ output_fields_block1=F,
+ output_fields_block2=F,
+ stride_fields=1
+/
+&output_receiver_stations
+ output_seismograms=T
+/
 
 !---begin:station_listU---
 -4d0 0d0 -14.05d0

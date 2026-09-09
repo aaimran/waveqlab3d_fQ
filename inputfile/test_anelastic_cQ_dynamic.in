@@ -31,6 +31,13 @@ waveqlab3d input file: independent configurable constant-Q dynamics regression
  use_mms=F
 /
 &output_list
- output_exact_moment=F, output_seismograms=F, output_station_info=F,
- output_fault_topo=F, output_fields_block1=F, output_fields_block2=F, stride_fields=1
+ output_exact_moment=F,
+ output_fault_topo=F,
+ output_fields_block1=F,
+ output_fields_block2=F,
+ stride_fields=1
+/
+&output_receiver_stations
+ output_seismograms=F,
+ output_station_info=F
 /

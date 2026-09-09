@@ -95,15 +95,18 @@ btp(2)%profile_path = 'No-path' /
 /
 
 &output_list
- output_exact_moment = F,
- output_seismograms = T,
- output_fault_topo = F,
- output_fields_block1 = F,
- output_fields_block2 = F,
- stride_fields = 1,
- station_xyz_index = T,
- station_list = 'infile',
- station_file_directory = './output/tpv36/tpv36_t6_100m_pml-3k_ver-d',
+ output_exact_moment=F,
+ output_fault_topo=F,
+ output_fields_block1=F,
+ output_fields_block2=F,
+ stride_fields=1
+/
+&output_receiver_stations
+ output_seismograms=T,
+ station_xyz_index=T,
+ station_list='infile',
+ station_file_directory='.
+/output/tpv36/tpv36_t6_100m_pml-3k_ver-d',
  output_station_info = F,
  station_number_in_list = F,
  station_number_in_filename = F,

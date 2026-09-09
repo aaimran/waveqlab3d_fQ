@@ -52,16 +52,19 @@ btp(2)%npml = 20 /
  use_mms = F /
 
 &output_list
- output_exact_moment = F,
- output_seismograms = T,
- output_fault_topo = F,
- output_fields_block1 = F,
- output_fields_block2 = F,
- stride_fields = 1,
- station_xyz_index = T,
- station_list = 'infile',
- station_list_file = 'station_list.txt',
- station_file_directory = './output/off_fault_stations',
+ output_exact_moment=F,
+ output_fault_topo=F,
+ output_fields_block1=F,
+ output_fields_block2=F,
+ stride_fields=1
+/
+&output_receiver_stations
+ output_seismograms=T,
+ station_xyz_index=T,
+ station_list='infile',
+ station_list_file='station_list.txt',
+ station_file_directory='.
+/output/off_fault_stations',
  output_station_info = F
  /
 

@@ -15,5 +15,9 @@
  Qs0 = 40d0, 100d0, Qp0 = 80d0, 180d0
 /
 &output_list
- output_seismograms = F, output_fields_block1 = F, output_fields_block2 = F
+ output_fields_block1=F,
+ output_fields_block2=F
+/
+&output_receiver_stations
+ output_seismograms=F
 /

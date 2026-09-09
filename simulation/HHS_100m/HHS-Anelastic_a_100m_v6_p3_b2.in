@@ -59,15 +59,18 @@ btp(2)%npml = 30 /
 
 
 &output_list
- output_exact_moment = F,
- output_seismograms = T,
- output_fault_topo = F,
- output_fields_block1 = F,
- output_fields_block2 = F,
- stride_fields = 1,
- station_xyz_index = T,
- station_list = 'infile',
- station_file_directory = './output/HHS/Anelastic/w_anelastic_a_100_v6_p3_b2',
+ output_exact_moment=F,
+ output_fault_topo=F,
+ output_fields_block1=F,
+ output_fields_block2=F,
+ stride_fields=1
+/
+&output_receiver_stations
+ output_seismograms=T,
+ station_xyz_index=T,
+ station_list='infile',
+ station_file_directory='.
+/output/HHS/Anelastic/w_anelastic_a_100_v6_p3_b2',
  output_station_info = F,
  station_number_in_list = T,
  station_number_in_filename = T,

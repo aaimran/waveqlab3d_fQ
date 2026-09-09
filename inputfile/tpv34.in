@@ -40,11 +40,14 @@ btp(2)%material_path(3) = '../inputfile/materials_test/dataP_50_ext/rho0' /
  use_mms = F /
 
 &output_list
- output_seismograms = T,
- output_fault_topo = F, 
- output_fields_block1 = F,
- output_fields_block2 = F,
- stride_fields = 1 /
+ output_fault_topo=F,
+ output_fields_block1=F,
+ output_fields_block2=F,
+ stride_fields=1
+/
+&output_receiver_stations
+ output_seismograms=T
+/
 
 
 !---begin:station_listU---

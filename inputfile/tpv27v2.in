@@ -38,11 +38,14 @@ btp(2)%rc = 1d0 /
  use_mms = F /
 
 &output_list
- output_seismograms = T,
- output_fault_topo = T, 
- output_fields_block1 = F,
- output_fields_block2 = F,
- stride_fields = 1 /
+ output_fault_topo=T,
+ output_fields_block1=F,
+ output_fields_block2=F,
+ stride_fields=1
+/
+&output_receiver_stations
+ output_seismograms=T
+/
 
 
 !---begin:station_listU---

@@ -54,12 +54,15 @@ btp(2)%npml = 6 /
  use_mms = F /
 
 &output_list
- output_exact_moment = F,
- output_seismograms = T,
- output_fault_topo = F, 
- output_fields_block1 = F,
- output_fields_block2 = F,
- stride_fields = 1 /
+ output_exact_moment=F,
+ output_fault_topo=F,
+ output_fields_block1=F,
+ output_fields_block2=F,
+ stride_fields=1
+/
+&output_receiver_stations
+ output_seismograms=T
+/
 
 !---begin:station_listU---
  0d0 0.8d0 0.6d0

@@ -52,9 +52,11 @@ contains
 
     !real(kind = wp) :: xmin, xmax, ymin, ymax, zmin, zmax
 
-   namelist /output_list/ output_exact_moment, output_seismograms, output_station_info, &
-                     output_station_mapping, output_fault_topo, &
-                     output_fields_block1,output_fields_block2,stride_fields,station_xyz_index, &
+   namelist /output_list/ output_exact_moment, output_fault_topo, &
+                     output_fields_block1, output_fields_block2, stride_fields
+
+   namelist /output_receiver_stations/ output_seismograms, output_station_info, &
+                     output_station_mapping, station_xyz_index, &
                      station_list, station_list_file, station_file_directory, station_output_order, &
                      station_number_in_list, station_number_in_filename, &
                      station_use_block_subdirectories, interface_stations, &
@@ -67,31 +69,37 @@ contains
     py = G%C%pr
     pz = G%C%ps
 
-    ! defaults
-
+    ! defaults for output_list
     output_exact_moment = .false.
-   output_seismograms = .false.
-   output_station_info = .true.
-   output_station_mapping = .true.
+    output_fault_topo = .false.
     output_fields_block1 = .false.
     output_fields_block2 = .false.
     stride_fields = 1
-      station_xyz_index = .false.
-    station_list = 'infile'
-    station_list_file = ''
-      station_file_directory = 'seismogram'
-      station_output_order = 't vx vy vz'
-      station_number_in_list = .false.
-      station_number_in_filename = .false.
-      station_use_block_subdirectories = .true.
-      interface_stations = 'block_1_2'
-      append_block = .false.
-      station_add_header = .false.
-      station_add_metadata = .false.
 
     rewind(input)
     read(input,nml=output_list,iostat=stat)
     if (stat>0) stop 'error reading namelist output_list'
+
+    ! defaults for output_receiver_stations
+    output_seismograms = .false.
+    output_station_info = .true.
+    output_station_mapping = .true.
+    station_xyz_index = .false.
+    station_list = 'infile'
+    station_list_file = ''
+    station_file_directory = 'seismogram'
+    station_output_order = 't vx vy vz'
+    station_number_in_list = .false.
+    station_number_in_filename = .false.
+    station_use_block_subdirectories = .true.
+    interface_stations = 'block_1_2'
+    append_block = .false.
+    station_add_header = .false.
+    station_add_metadata = .false.
+
+    rewind(input)
+    read(input,nml=output_receiver_stations,iostat=stat)
+    if (stat>0) stop 'error reading namelist output_receiver_stations'
 
     S%output_exact_moment = output_exact_moment
     S%output_seismograms = output_seismograms

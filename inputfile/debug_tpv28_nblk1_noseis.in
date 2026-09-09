@@ -30,7 +30,10 @@ btp(1)%profile_path = 'No-path' /
  use_mms = F, nx = 1d0, ny = 1d0, nz = 1d0, nt = 1d0 /
 
 &output_list
- output_seismograms = F,
- output_fault_topo = F, 
- output_fields_block1 = F,
- stride_fields = 1 /
+ output_fault_topo=F,
+ output_fields_block1=F,
+ stride_fields=1
+/
+&output_receiver_stations
+ output_seismograms=F
+/

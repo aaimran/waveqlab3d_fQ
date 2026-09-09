@@ -50,14 +50,15 @@ contains
          material_source, interpol, w_stride, w_fault, use_topography, topo, &
          mollify_source
     namelist /block_list/ btp
-    namelist /output_list/ output_exact_moment, output_seismograms, output_station_info, &
-         output_station_mapping, output_fault_topo, output_fields_block1, &
-         output_fields_block2, stride_fields, station_xyz_index, station_list, &
+    namelist /output_list/ output_exact_moment, output_fault_topo, &
+         output_fields_block1, output_fields_block2, stride_fields
+
+    namelist /output_receiver_stations/ output_seismograms, output_station_info, &
+         output_station_mapping, station_xyz_index, station_list, &
          station_list_file, station_file_directory, station_output_order, &
          station_number_in_list, station_number_in_filename, &
          station_use_block_subdirectories, interface_stations, &
-         append_block, &
-         station_add_header, station_add_metadata
+         append_block, station_add_header, station_add_metadata
 
     call MPI_Comm_rank(MPI_COMM_WORLD, world_rank, ierr)
     call MPI_Comm_size(MPI_COMM_WORLD, world_size, ierr)
@@ -206,6 +207,17 @@ contains
              if (stat /= 0) then
                 call issues%add(DIAG_ERROR, 'CFG-OUTPUT-001', &
                      'Cannot parse &output_list: '//trim(iomsg), section='output_list', &
+                     suggestion='Fix namelist syntax or unknown fields.')
+             end if
+          end if
+
+          if (.not.issues%has_errors()) then
+             rewind(infile)
+             read(infile, nml=output_receiver_stations, iostat=stat, iomsg=iomsg)
+             if (stat /= 0) then
+                call issues%add(DIAG_ERROR, 'CFG-OUTPUT-002', &
+                     'Cannot parse &output_receiver_stations: '//trim(iomsg), &
+                     section='output_receiver_stations', &
                      suggestion='Fix namelist syntax or unknown fields.')
              else if (output_seismograms) then
                 call validate_station_rows(infile, station_list, station_list_file, &
