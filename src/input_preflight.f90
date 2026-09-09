@@ -11,6 +11,7 @@ module input_preflight
   use anelastic_cq8_b2_model, only : read_cq8_b2_parameters
   use anelastic_cq_model, only : read_cq_parameters
   use anelastic_fq8_model, only : read_fq8_parameters
+  use viscoelastic_model, only : read_viscoelastic_parameters
   use decomposition_safety, only : stencil_requirements_t, get_stencil_requirements, &
        topology_fits, select_single_block_topology
   implicit none
@@ -198,6 +199,17 @@ contains
                      'also provide Qs0/Qp0 >= 15 and valid gamma/frequencies.')
              else
                 config%has_fq8 = .true.
+             end if
+          end if
+          if (.not.issues%has_errors() .and. trim(adjustl(response)) == 'viscoelastic') then
+             call read_viscoelastic_parameters(infile, config%ve, nblocks, stat, iomsg)
+             if (stat /= 0) then
+                call issues%add(DIAG_ERROR, 'CFG-VE-001', trim(iomsg), &
+                     section='viscoelastic_list', &
+                     suggestion='Provide valid attenuation, Qs0/Qp0 >= 15, weight_method, '// &
+                     'and n_mechanisms in [3,8].')
+             else
+                config%has_ve = .true.
              end if
           end if
 
@@ -528,7 +540,8 @@ contains
     select case (trim(adjustl(response)))
     case ('elastic','plastic','anelastic','low-pass','anelastic-Q','anelastic-Q4','anelastic-Q8', &
           'anelastic-cQ8-b2','anelastic-cQ', &
-          'anelastic-Qf','anelastic-fQ8','constant-Q-4M','constant-Q-8M','frequency-Q-4M','frequency-Q-8M')
+          'anelastic-Qf','anelastic-fQ8','constant-Q-4M','constant-Q-8M','frequency-Q-4M','frequency-Q-8M', &
+          'viscoelastic')
     case default
        call issues%add(DIAG_ERROR, 'CFG-PROBLEM-002', &
             'Unsupported response: '//trim(response), section='problem_list', field='response')

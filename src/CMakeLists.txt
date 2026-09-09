@@ -70,6 +70,8 @@ set(WQL3D_SRC
   input_preflight.f90
   material.f90
   anelastic_cq_material.f90
+  viscoelastic_model.f90
+  viscoelastic_material.f90
   plastic_material.f90
   pml.f90
   mpi3dbasic.f90

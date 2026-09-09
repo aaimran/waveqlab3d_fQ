@@ -7,6 +7,7 @@ module simulation_config
   use anelastic_cq8_b2_model, only : cq8_b2_parameters
   use anelastic_cq_model, only : cq_parameters
   use anelastic_fq8_model, only : fq8_parameters
+  use viscoelastic_model, only : viscoelastic_parameters
   implicit none
   private
 
@@ -42,11 +43,13 @@ module simulation_config
      type(cq8_b2_parameters) :: cq8_b2
      type(cq_parameters) :: cq
      type(fq8_parameters) :: fq8
+     type(viscoelastic_parameters) :: ve
      logical :: has_q4 = .false.
      logical :: has_q8 = .false.
      logical :: has_cq8_b2 = .false.
      logical :: has_cq = .false.
      logical :: has_fq8 = .false.
+     logical :: has_ve = .false.
      integer :: process_dims(2,3) = 1
      integer :: block_sizes(2) = 0
      integer :: rank_begin(2) = 0

@@ -151,6 +151,16 @@ module datatypes
       real(kind = wp), dimension(8) :: strength_p_Qf8 = 0.0_wp
       real(kind = wp), dimension(:,:,:,:), allocatable :: eta4Qf8,eta5Qf8,eta6Qf8,eta7Qf8,eta8Qf8,eta9Qf8
       real(kind = wp), dimension(:,:,:,:), allocatable :: Deta4Qf8,Deta5Qf8,Deta6Qf8,Deta7Qf8,Deta8Qf8,Deta9Qf8
+
+      ! --- unified viscoelastic (response == 'viscoelastic')
+      logical :: viscoelastic = .false.
+      integer :: n_mechanism_ve = 0
+      real(kind = wp), dimension(:), allocatable :: tau_ve, weight_s_ve, weight_p_ve
+      real(kind = wp), dimension(:,:,:), allocatable :: Qs_inv_ve, Qp_inv_ve
+      real(kind = wp), dimension(:,:,:,:), allocatable :: eta4_ve,eta5_ve,eta6_ve
+      real(kind = wp), dimension(:,:,:,:), allocatable :: eta7_ve,eta8_ve,eta9_ve
+      real(kind = wp), dimension(:,:,:,:), allocatable :: Deta4_ve,Deta5_ve,Deta6_ve
+      real(kind = wp), dimension(:,:,:,:), allocatable :: Deta7_ve,Deta8_ve,Deta9_ve
    end type block_material
  
    !> block_plastic datatype to hold Drucker-Prager plasticity variables

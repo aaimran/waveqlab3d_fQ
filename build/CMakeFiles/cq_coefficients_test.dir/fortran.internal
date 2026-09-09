@@ -1,0 +1,4 @@
+# The fortran modules provided by this target.
+provides
+ anelastic_cq_model.mod
+ common.mod

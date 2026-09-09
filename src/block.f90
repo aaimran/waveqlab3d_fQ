@@ -29,7 +29,7 @@ module block
  contains
  
      subroutine init_block(mesh_source, type_of_mesh,material_source,response,fd_type, order_fd, interpol, &
-       use_topography, topo, B, problem, btp, block_comm,infile,id,ny,nz,q4_config,q8_config,cq_config,fq8_config,process_dims,debug)
+       use_topography, topo, B, problem, btp, block_comm,infile,id,ny,nz,q4_config,q8_config,cq_config,fq8_config,ve_config,process_dims,debug)
  
      !> @brief initialize a block
  
@@ -50,6 +50,8 @@ module block
      use anelastic_cq_model, only : cq_parameters
      use anelastic_cq_material, only : init_anelastic_cq_properties
      use anelastic_fq8_model, only : fq8_parameters
+     use viscoelastic_model, only : viscoelastic_parameters
+     use viscoelastic_material, only : init_viscoelastic_properties
      use decomposition_safety, only : stencil_requirements_t, get_stencil_requirements
      implicit none
  
@@ -60,6 +62,7 @@ module block
      type(q8_parameters), intent(in) :: q8_config
      type(cq_parameters), intent(in) :: cq_config
      type(fq8_parameters), intent(in) :: fq8_config
+     type(viscoelastic_parameters), intent(in) :: ve_config
      type(block_type),intent(out) :: B
      integer, intent(in) :: block_comm,infile
      logical, intent(in) :: interpol, use_topography
@@ -195,7 +198,13 @@ module block
       else
         B%M%anelastic_Qf8 = .false.
       end if
-     
+
+      if (trim(response) == 'viscoelastic') then
+        call init_viscoelastic_properties(B%M, B%G, ve_config, id)
+      else
+        B%M%viscoelastic = .false.
+      end if
+
      if(response == 'plastic') call init_plastic_material(B%P,B%G,B%I,problem,btp%mu_beta_eta)
  
      if (B%MT%use_moment_tensor) then

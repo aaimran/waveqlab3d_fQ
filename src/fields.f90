@@ -88,6 +88,11 @@ contains
          F%M%Deta6cQ=A*F%M%Deta6cQ; F%M%Deta7cQ=A*F%M%Deta7cQ
          F%M%Deta8cQ=A*F%M%Deta8cQ; F%M%Deta9cQ=A*F%M%Deta9cQ
       end if
+      if (F%M%viscoelastic) then
+         F%M%Deta4_ve=A*F%M%Deta4_ve; F%M%Deta5_ve=A*F%M%Deta5_ve
+         F%M%Deta6_ve=A*F%M%Deta6_ve; F%M%Deta7_ve=A*F%M%Deta7_ve
+         F%M%Deta8_ve=A*F%M%Deta8_ve; F%M%Deta9_ve=A*F%M%Deta9_ve
+      end if
       if (allocated(F%M%eta4Qf8)) then
          F%M%Deta4Qf8 = A*F%M%Deta4Qf8
          F%M%Deta5Qf8 = A*F%M%Deta5Qf8
@@ -202,6 +207,14 @@ contains
          F%M%eta7cQ=F%M%eta7cQ+dt*F%M%Deta7cQ
          F%M%eta8cQ=F%M%eta8cQ+dt*F%M%Deta8cQ
          F%M%eta9cQ=F%M%eta9cQ+dt*F%M%Deta9cQ
+      end if
+      if (F%M%viscoelastic) then
+         F%M%eta4_ve=F%M%eta4_ve+dt*F%M%Deta4_ve
+         F%M%eta5_ve=F%M%eta5_ve+dt*F%M%Deta5_ve
+         F%M%eta6_ve=F%M%eta6_ve+dt*F%M%Deta6_ve
+         F%M%eta7_ve=F%M%eta7_ve+dt*F%M%Deta7_ve
+         F%M%eta8_ve=F%M%eta8_ve+dt*F%M%Deta8_ve
+         F%M%eta9_ve=F%M%eta9_ve+dt*F%M%Deta9_ve
       end if
       if (allocated(F%M%eta4Qf8)) then
          F%M%eta4Qf8 = F%M%eta4Qf8 + dt*F%M%Deta4Qf8

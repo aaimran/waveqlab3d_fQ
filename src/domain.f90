@@ -47,6 +47,7 @@ contains
     use anelastic_cq8_b2_model, only : cq8_b2_relaxation_dt_limit
     use anelastic_cq_model, only : cq_relaxation_dt_limit
     use anelastic_fq8_model, only : fq8_relaxation_dt_limit
+    use viscoelastic_model, only : ve_params_dt_limit
 
     implicit none
 
@@ -179,6 +180,9 @@ contains
      else if (trim(response_norm) == 'anelastic-fQ8') then
        relaxation_dt_limit = fq8_relaxation_dt_limit(config%fq8)
        dtmin = min(dtmin, relaxation_dt_limit)
+     else if (trim(response_norm) == 'viscoelastic') then
+       relaxation_dt_limit = ve_params_dt_limit(config%ve)
+       dtmin = min(dtmin, relaxation_dt_limit)
      end if
      if (config%problem%dt > 0.0_wp) then
         D%dt = config%problem%dt
@@ -237,7 +241,7 @@ contains
       call init_block(D%mesh_source, D%type_of_mesh, D%material_source,&
            D%response, D%fd_type,  D%order, D%interpol, D%use_topography, topo, D%B(i), &
          problem, btp(i), block_comms(i),infile,i, ny, nz, config%q4, selected_q8, config%cq, config%fq8, &
-         config%process_dims(i,:), D%debug)
+         config%ve, config%process_dims(i,:), D%debug)
 
       cart_size = [D%B(i)%G%C%size_q,D%B(i)%G%C%size_r,D%B(i)%G%C%size_s]
       coord = D%B(i)%G%C%coord
@@ -262,6 +266,8 @@ contains
         write (*,*) "        cQ8-b2 relaxation limit = ", relaxation_dt_limit
       if (trim(response_norm) == 'anelastic-cQ') &
         write (*,*) "        cQ relaxation limit = ", relaxation_dt_limit
+      if (trim(response_norm) == 'viscoelastic') &
+        write (*,*) "        viscoelastic relaxation limit = ", relaxation_dt_limit
       write (*,*) "        Final time = ", D%t_final
     end if
 
@@ -438,6 +444,7 @@ contains
     use material, only : destroy_anelastic_Q4_properties, destroy_anelastic_Q8_properties, &
          destroy_anelastic_Qf8_properties
     use anelastic_cq_material, only : destroy_anelastic_cq_properties
+    use viscoelastic_material, only : destroy_viscoelastic_properties
     use diagnostics, only : fatal_local
     use mpi3dbasic, only : rank
     use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
@@ -450,7 +457,8 @@ contains
     if (trim(D%response) == 'anelastic-Q4' .or. trim(D%response) == 'anelastic-Q8' .or. &
         trim(D%response) == 'anelastic-cQ8-b2' .or. &
         trim(D%response) == 'anelastic-cQ' .or. &
-        trim(D%response) == 'anelastic-fQ8') then
+        trim(D%response) == 'anelastic-fQ8' .or. &
+        trim(D%response) == 'viscoelastic') then
        local_eta = 0.0_wp
        local_field = 0.0_wp
        local_finite = .true.
@@ -474,11 +482,16 @@ contains
                   maxval(abs(D%B(i)%M%eta5cQ)),maxval(abs(D%B(i)%M%eta6cQ)), &
                   maxval(abs(D%B(i)%M%eta7cQ)),maxval(abs(D%B(i)%M%eta8cQ)), &
                   maxval(abs(D%B(i)%M%eta9cQ)))
-          else if (allocated(D%B(i)%M%eta4Qf8)) then
+          else if (trim(D%response) == 'anelastic-fQ8' .and. allocated(D%B(i)%M%eta4Qf8)) then
              local_eta = max(local_eta,maxval(abs(D%B(i)%M%eta4Qf8)), &
                   maxval(abs(D%B(i)%M%eta5Qf8)),maxval(abs(D%B(i)%M%eta6Qf8)), &
                   maxval(abs(D%B(i)%M%eta7Qf8)),maxval(abs(D%B(i)%M%eta8Qf8)), &
                   maxval(abs(D%B(i)%M%eta9Qf8)))
+          else if (trim(D%response) == 'viscoelastic' .and. allocated(D%B(i)%M%eta4_ve)) then
+             local_eta = max(local_eta, maxval(abs(D%B(i)%M%eta4_ve)), &
+                  maxval(abs(D%B(i)%M%eta5_ve)), maxval(abs(D%B(i)%M%eta6_ve)), &
+                  maxval(abs(D%B(i)%M%eta7_ve)), maxval(abs(D%B(i)%M%eta8_ve)), &
+                  maxval(abs(D%B(i)%M%eta9_ve)))
           end if
           local_finite = local_finite .and. ieee_is_finite(local_field) .and. &
                ieee_is_finite(local_eta)
@@ -504,6 +517,9 @@ contains
        if (.not.global_finite .and. trim(D%response) == 'anelastic-fQ8') &
             call fatal_local('RUN-FQ8-001', &
             'Non-finite fQ8 field or memory state detected at shutdown.', 'close_domain')
+       if (.not.global_finite .and. trim(D%response) == 'viscoelastic') &
+            call fatal_local('RUN-VE-001', &
+            'Non-finite viscoelastic field or memory state detected at shutdown.', 'close_domain')
        if (rank == 0 .and. trim(D%response) == 'anelastic-Q4') &
             write(*,'(A,ES12.4,A,ES12.4)') &
             'Q4 final state: max|field|=', global_field, ', max|memory|=', global_eta
@@ -519,6 +535,9 @@ contains
        if (rank == 0 .and. trim(D%response) == 'anelastic-fQ8') &
             write(*,'(A,ES12.4,A,ES12.4)') &
             'fQ8 final state: max|field|=', global_field, ', max|memory|=', global_eta
+       if (rank == 0 .and. trim(D%response) == 'viscoelastic') &
+            write(*,'(A,ES12.4,A,ES12.4)') &
+            'viscoelastic final state: max|field|=', global_field, ', max|memory|=', global_eta
     end if
 
     if ( D%w_fault .eqv.  .true.) then
@@ -538,6 +557,7 @@ contains
        if (D%B(i)%M%anelastic_Q8) call destroy_anelastic_Q8_properties(D%B(i)%M)
        if (D%B(i)%M%anelastic_cQ) call destroy_anelastic_cq_properties(D%B(i)%M)
        if (D%B(i)%M%anelastic_Qf8) call destroy_anelastic_Qf8_properties(D%B(i)%M)
+       if (D%B(i)%M%viscoelastic) call destroy_viscoelastic_properties(D%B(i)%M)
     end do
 
   end subroutine close_domain

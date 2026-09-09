@@ -1,0 +1,8 @@
+/Volumes/CORSAIR/Google_Drive/waveqlab3d_fQ/build/CMakeFiles/waveqlab3d.dir
+/Volumes/CORSAIR/Google_Drive/waveqlab3d_fQ/build/CMakeFiles/pre_wql3d.dir
+/Volumes/CORSAIR/Google_Drive/waveqlab3d_fQ/build/CMakeFiles/fq8_effective_response_test.dir
+/Volumes/CORSAIR/Google_Drive/waveqlab3d_fQ/build/CMakeFiles/cq_coefficients_test.dir
+/Volumes/CORSAIR/Google_Drive/waveqlab3d_fQ/build/CMakeFiles/fq8_withers_benchmark_test.dir
+/Volumes/CORSAIR/Google_Drive/waveqlab3d_fQ/build/CMakeFiles/test.dir
+/Volumes/CORSAIR/Google_Drive/waveqlab3d_fQ/build/CMakeFiles/edit_cache.dir
+/Volumes/CORSAIR/Google_Drive/waveqlab3d_fQ/build/CMakeFiles/rebuild_cache.dir

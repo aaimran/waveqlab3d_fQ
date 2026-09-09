@@ -254,6 +254,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
@@ -340,6 +341,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                
@@ -424,6 +426,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                
@@ -509,6 +512,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                
@@ -593,6 +597,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                
@@ -685,6 +690,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                  
@@ -775,6 +781,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                  
@@ -866,6 +873,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                  
@@ -957,6 +965,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                  
@@ -1045,6 +1054,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                
@@ -1123,6 +1133,7 @@ contains
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                  
@@ -1200,6 +1211,7 @@ if (F%order .eq. 5) then
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                  
@@ -1291,6 +1303,7 @@ if (F%order .eq. 6) then
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                  
@@ -1382,6 +1395,7 @@ if (F%order .eq. 7) then
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                  
@@ -1474,6 +1488,7 @@ if (F%order .eq. 7) then
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                  
@@ -1565,6 +1580,7 @@ if (F%order .eq. 7) then
                if (M%anelastic_Q) call apply_anelastic_Q_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Q8) call apply_anelastic_Q8_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_cQ) call apply_anelastic_cQ_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
+               if (M%viscoelastic) call apply_viscoelastic_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_Qf) call apply_anelastic_Qf_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                if (M%anelastic_const_Q_4M) call apply_const_Q_4M_point_dispatch(F, M, G, x, y, z, Ux, Uy, Uz, DU)
                  
@@ -3574,5 +3590,94 @@ if (F%order .eq. 7) then
           end do
 
      end subroutine apply_anelastic_Qf8_point_pml
+
+
+     subroutine apply_viscoelastic_point(M, x, y, z, Ux, Uy, Uz, DU)
+          use common, only : wp
+          use datatypes, only : block_material
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(wp), intent(inout) :: DU(:)
+          integer :: i, n
+          real(wp) :: tr, mu2, pm, sm, bulk
+          n = M%n_mechanism_ve
+          DU(4) = DU(4) - sum(M%eta4_ve(x,y,z,1:n))
+          DU(5) = DU(5) - sum(M%eta5_ve(x,y,z,1:n))
+          DU(6) = DU(6) - sum(M%eta6_ve(x,y,z,1:n))
+          DU(7) = DU(7) - sum(M%eta7_ve(x,y,z,1:n))
+          DU(8) = DU(8) - sum(M%eta8_ve(x,y,z,1:n))
+          DU(9) = DU(9) - sum(M%eta9_ve(x,y,z,1:n))
+          tr = Ux(1) + Uy(2) + Uz(3)
+          mu2 = 2.0_wp * M%M(x,y,z,2)
+          do i = 1, n
+             sm = M%weight_s_ve(i) * M%Qs_inv_ve(x,y,z)
+             pm = M%weight_p_ve(i) * M%Qp_inv_ve(x,y,z)
+             bulk = (M%M(x,y,z,1) + mu2) * pm - mu2 * sm
+             M%Deta4_ve(x,y,z,i) = M%Deta4_ve(x,y,z,i) + (mu2*sm*Ux(1) + bulk*tr - M%eta4_ve(x,y,z,i)) / M%tau_ve(i)
+             M%Deta5_ve(x,y,z,i) = M%Deta5_ve(x,y,z,i) + (mu2*sm*Uy(2) + bulk*tr - M%eta5_ve(x,y,z,i)) / M%tau_ve(i)
+             M%Deta6_ve(x,y,z,i) = M%Deta6_ve(x,y,z,i) + (mu2*sm*Uz(3) + bulk*tr - M%eta6_ve(x,y,z,i)) / M%tau_ve(i)
+             M%Deta7_ve(x,y,z,i) = M%Deta7_ve(x,y,z,i) + (M%M(x,y,z,2)*sm*(Uy(1)+Ux(2)) - M%eta7_ve(x,y,z,i)) / M%tau_ve(i)
+             M%Deta8_ve(x,y,z,i) = M%Deta8_ve(x,y,z,i) + (M%M(x,y,z,2)*sm*(Uz(1)+Ux(3)) - M%eta8_ve(x,y,z,i)) / M%tau_ve(i)
+             M%Deta9_ve(x,y,z,i) = M%Deta9_ve(x,y,z,i) + (M%M(x,y,z,2)*sm*(Uz(2)+Uy(3)) - M%eta9_ve(x,y,z,i)) / M%tau_ve(i)
+          end do
+     end subroutine apply_viscoelastic_point
+
+
+     subroutine apply_viscoelastic_point_dispatch(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+          use common, only : wp
+          use datatypes, only : block_type, block_grid_t, block_material
+          type(block_type), intent(in) :: B
+          type(block_grid_t), intent(in) :: G
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(wp), intent(inout) :: DU(:)
+          if (point_in_pml(B, G, x, y, z)) then
+             call apply_viscoelastic_point_pml(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+          else
+             call apply_viscoelastic_point(M, x, y, z, Ux, Uy, Uz, DU)
+          end if
+     end subroutine apply_viscoelastic_point_dispatch
+
+
+     subroutine apply_viscoelastic_point_pml(B, M, G, x, y, z, Ux, Uy, Uz, DU)
+          use common, only : wp
+          use datatypes, only : block_type, block_grid_t, block_material
+          type(block_type), intent(in) :: B
+          type(block_grid_t), intent(in) :: G
+          type(block_material), intent(inout) :: M
+          integer, intent(in) :: x, y, z
+          real(wp), intent(in) :: Ux(:), Uy(:), Uz(:)
+          real(wp), intent(inout) :: DU(:)
+          integer :: i, n
+          real(wp) :: tr, exx, eyy, ezz, gxy, gxz, gyz, dx, dy, dz, Qx(9), Qy(9), Qz(9)
+          real(wp) :: mu2, pm, sm, bulk
+          call pml_damping_and_q(B, G, x, y, z, dx, dy, dz, Qx, Qy, Qz)
+          exx = Ux(1) - dx*Qx(4); eyy = Uy(2) - dy*Qy(5); ezz = Uz(3) - dz*Qz(6)
+          tr = exx + eyy + ezz
+          gxy = Uy(1) + Ux(2) - dx*Qx(7) - dy*Qy(7)
+          gxz = Uz(1) + Ux(3) - dx*Qx(8) - dz*Qz(8)
+          gyz = Uz(2) + Uy(3) - dy*Qy(9) - dz*Qz(9)
+          n = M%n_mechanism_ve
+          DU(4) = DU(4) - sum(M%eta4_ve(x,y,z,1:n))
+          DU(5) = DU(5) - sum(M%eta5_ve(x,y,z,1:n))
+          DU(6) = DU(6) - sum(M%eta6_ve(x,y,z,1:n))
+          DU(7) = DU(7) - sum(M%eta7_ve(x,y,z,1:n))
+          DU(8) = DU(8) - sum(M%eta8_ve(x,y,z,1:n))
+          DU(9) = DU(9) - sum(M%eta9_ve(x,y,z,1:n))
+          mu2 = 2.0_wp * M%M(x,y,z,2)
+          do i = 1, n
+             sm = M%weight_s_ve(i) * M%Qs_inv_ve(x,y,z)
+             pm = M%weight_p_ve(i) * M%Qp_inv_ve(x,y,z)
+             bulk = (M%M(x,y,z,1) + mu2) * pm - mu2 * sm
+             M%Deta4_ve(x,y,z,i) = M%Deta4_ve(x,y,z,i) + (mu2*sm*exx + bulk*tr - M%eta4_ve(x,y,z,i)) / M%tau_ve(i)
+             M%Deta5_ve(x,y,z,i) = M%Deta5_ve(x,y,z,i) + (mu2*sm*eyy + bulk*tr - M%eta5_ve(x,y,z,i)) / M%tau_ve(i)
+             M%Deta6_ve(x,y,z,i) = M%Deta6_ve(x,y,z,i) + (mu2*sm*ezz + bulk*tr - M%eta6_ve(x,y,z,i)) / M%tau_ve(i)
+             M%Deta7_ve(x,y,z,i) = M%Deta7_ve(x,y,z,i) + (M%M(x,y,z,2)*sm*gxy - M%eta7_ve(x,y,z,i)) / M%tau_ve(i)
+             M%Deta8_ve(x,y,z,i) = M%Deta8_ve(x,y,z,i) + (M%M(x,y,z,2)*sm*gxz - M%eta8_ve(x,y,z,i)) / M%tau_ve(i)
+             M%Deta9_ve(x,y,z,i) = M%Deta9_ve(x,y,z,i) + (M%M(x,y,z,2)*sm*gyz - M%eta9_ve(x,y,z,i)) / M%tau_ve(i)
+          end do
+     end subroutine apply_viscoelastic_point_pml
 
 end module RHS_Interior

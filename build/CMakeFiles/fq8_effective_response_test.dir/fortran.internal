@@ -1,0 +1,5 @@
+# The fortran modules provided by this target.
+provides
+ anelastic_fq8_model.mod
+ common.mod
+ withers_tables.mod

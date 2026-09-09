@@ -1,0 +1,11 @@
+# The fortran modules provided by this target.
+provides
+ common.mod
+ datatypes.mod
+ diagnostics.mod
+ grid.mod
+ metrics.mod
+ mpi3d_interface.mod
+ mpi3dbasic.mod
+ mpi3dcomm.mod
+ mpi3dio.mod
