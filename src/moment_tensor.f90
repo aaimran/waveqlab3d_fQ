@@ -33,38 +33,19 @@ contains
     real(kind = wp) :: physX,physY,physZ,physPX,physPY,physPZ
 
 
-    if (S%block_id == 1) then
-       rewind(infile)
-       do
-          read(infile,'(a)') temp
-          if (temp=='!---begin:tensor_listU---') exit
-       end do
+    ! Try unified tensor_list first; fall back to per-block tensor_listU/V
+    call count_tensor_rows(infile, '!---begin:tensor_list---', &
+         '!---end:tensor_list---', n_mom, stat)
 
-       ! determine number of moment tensors in list
-
-       n_mom = 0
-       do
-          read(infile,'(a)') temp
-          if (temp=='!---end:tensor_listU---') exit
-          n_mom = n_mom+1
-       end do
-    end if
-
-    if (S%block_id == 2) then
-       rewind(infile)
-       do
-          read(infile,'(a)') temp
-          if (temp=='!---begin:tensor_listV---') exit
-       end do
-
-       ! determine number of moment tensors in list
-
-       n_mom = 0
-       do
-          read(infile,'(a)') temp
-          if (temp=='!---end:tensor_listV---') exit
-          n_mom = n_mom+1
-       end do
+    if (stat /= 0) then
+       ! Unified marker not found — use per-block markers
+       if (S%block_id == 1) then
+          call count_tensor_rows(infile, '!---begin:tensor_listU---', &
+               '!---end:tensor_listU---', n_mom, stat)
+       else
+          call count_tensor_rows(infile, '!---begin:tensor_listV---', &
+               '!---end:tensor_listV---', n_mom, stat)
+       end if
     end if
 
 
@@ -108,20 +89,14 @@ contains
 
     S%num_tensor = n_mom
 
-    rewind(infile)
-
-    if(S%block_id == 1) then
-       do
-          read(infile,'(a)') temp
-          if (temp=='!---begin:tensor_listU---') exit
-       end do
-    end if
-
-    if(S%block_id == 2) then
-       do
-          read(infile,'(a)') temp
-          if (temp=='!---begin:tensor_listV---') exit
-       end do
+    ! Seek to the same marker used for counting
+    call seek_tensor_marker(infile, '!---begin:tensor_list---', stat)
+    if (stat /= 0) then
+       if (S%block_id == 1) then
+          call seek_tensor_marker(infile, '!---begin:tensor_listU---', stat)
+       else
+          call seek_tensor_marker(infile, '!---begin:tensor_listV---', stat)
+       end if
     end if
 
     if (S%num_tensor > 0) then
@@ -1328,6 +1303,54 @@ contains
     end do
 
   end subroutine set_moment_tensor_smooth
+
+
+  subroutine count_tensor_rows(unit, begin_marker, end_marker, nrows, stat)
+    integer, intent(in) :: unit
+    character(*), intent(in) :: begin_marker, end_marker
+    integer, intent(out) :: nrows, stat
+    character(256) :: line
+
+    rewind(unit)
+    stat = -1
+    do
+       read(unit, '(a)', iostat=stat) line
+       if (stat /= 0) then
+          stat = -1; return
+       end if
+       if (trim(adjustl(line)) == begin_marker) exit
+    end do
+
+    nrows = 0
+    do
+       read(unit, '(a)', iostat=stat) line
+       if (stat /= 0) then
+          stat = -1; return
+       end if
+       if (trim(adjustl(line)) == end_marker) exit
+       nrows = nrows + 1
+    end do
+    stat = 0
+  end subroutine count_tensor_rows
+
+
+  subroutine seek_tensor_marker(unit, marker, stat)
+    integer, intent(in) :: unit
+    character(*), intent(in) :: marker
+    integer, intent(out) :: stat
+    character(256) :: line
+
+    rewind(unit)
+    do
+       read(unit, '(a)', iostat=stat) line
+       if (stat /= 0) then
+          stat = -1; return
+       end if
+       if (trim(adjustl(line)) == marker) then
+          stat = 0; return
+       end if
+    end do
+  end subroutine seek_tensor_marker
 
 
 end module moment_tensor

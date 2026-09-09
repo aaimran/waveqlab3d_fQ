@@ -34,6 +34,8 @@ contains
     integer :: infile, stat, ierr, world_rank, world_size
     real(wp) :: CFL, t_final, topo
     logical :: w_fault, interpol, use_topography, mollify_source, valid
+    logical :: use_moment_tensor
+    integer :: mt_order
     logical :: output_exact_moment, output_seismograms, output_station_info
     logical :: output_station_mapping, output_fault_topo
     logical :: output_fields_block1, output_fields_block2, station_xyz_index
@@ -206,6 +208,15 @@ contains
              else if (output_seismograms) then
                 call validate_station_rows(infile, station_list, station_list_file, &
                      station_number_in_list, issues)
+             end if
+          end if
+
+          if (.not.issues%has_errors()) then
+             use_moment_tensor = .false.; mt_order = 2
+             call read_moment_list_for_preflight(infile, use_moment_tensor, mt_order)
+             if (use_moment_tensor) then
+                call validate_moment_tensor_sources(infile, btp, nblocks, &
+                     mt_order, mollify_source, issues)
              end if
           end if
           close(infile)
@@ -858,5 +869,221 @@ contains
     integer :: ierr
     call MPI_Bcast(value, len(value), MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
   end subroutine bcast_chars
+
+
+  subroutine read_moment_list_for_preflight(infile, use_moment_tensor, order)
+    integer, intent(in) :: infile
+    logical, intent(out) :: use_moment_tensor
+    integer, intent(out) :: order
+    integer :: stat
+    namelist /moment_list/ use_moment_tensor, order
+
+    use_moment_tensor = .false.; order = 2
+    rewind(infile)
+    read(infile, nml=moment_list, iostat=stat)
+  end subroutine read_moment_list_for_preflight
+
+
+  subroutine validate_moment_tensor_sources(infile, btp, nblocks, order, &
+       mollify_source, issues)
+    type(block_temp_parameters), intent(in) :: btp(2)
+    type(diagnostic_list_t), intent(inout) :: issues
+    integer, intent(in) :: infile, nblocks, order
+    logical, intent(in) :: mollify_source
+
+    integer :: stat, row, nfields
+    real(wp) :: x, y, z, h(3), dist, min_safe, warn_dist
+    real(wp) :: dummy_r
+    integer :: dummy_i, b
+    character(64) :: dummy_s
+    character(256) :: line
+    character(512) :: message
+    logical :: has_unified, has_U, has_V, in_block
+
+    ! Detect which tensor list format is present
+    has_unified = marker_present(infile, '!---begin:tensor_list---')
+    has_U = marker_present(infile, '!---begin:tensor_listU---')
+    has_V = marker_present(infile, '!---begin:tensor_listV---')
+
+    if (has_unified .and. (has_U .or. has_V)) then
+       call issues%add(DIAG_ERROR, 'CFG-MT-001', &
+            'Input has both tensor_list and tensor_listU/V markers. Use one format only.', &
+            section='tensor_list', &
+            suggestion='Remove either the unified tensor_list or the per-block tensor_listU/V sections.')
+       return
+    end if
+
+    if (.not.has_unified .and. .not.has_U .and. .not.has_V) return
+
+    ! Parse and validate each source row from whichever list is present
+    if (has_unified) then
+       call validate_tensor_rows(infile, '!---begin:tensor_list---', &
+            '!---end:tensor_list---', 'tensor_list', &
+            btp, nblocks, order, mollify_source, issues)
+    end if
+    if (has_U) then
+       call validate_tensor_rows(infile, '!---begin:tensor_listU---', &
+            '!---end:tensor_listU---', 'tensor_listU', &
+            btp, nblocks, order, mollify_source, issues)
+    end if
+    if (has_V) then
+       call validate_tensor_rows(infile, '!---begin:tensor_listV---', &
+            '!---end:tensor_listV---', 'tensor_listV', &
+            btp, nblocks, order, mollify_source, issues)
+    end if
+
+  contains
+
+    logical function marker_present(unit, marker) result(found)
+      integer, intent(in) :: unit
+      character(*), intent(in) :: marker
+      character(256) :: buf
+      integer :: ios
+
+      rewind(unit)
+      found = .false.
+      do
+         read(unit, '(a)', iostat=ios) buf
+         if (ios /= 0) return
+         if (trim(adjustl(buf)) == marker) then
+            found = .true.; return
+         end if
+      end do
+    end function marker_present
+
+    subroutine validate_tensor_rows(unit, begin_marker, end_marker, list_name, &
+         btp, nblocks, order, mollify_source, issues)
+      integer, intent(in) :: unit, nblocks, order
+      character(*), intent(in) :: begin_marker, end_marker, list_name
+      type(block_temp_parameters), intent(in) :: btp(2)
+      logical, intent(in) :: mollify_source
+      type(diagnostic_list_t), intent(inout) :: issues
+
+      integer :: ios, row, ialpha
+      real(wp) :: x, y, z, h(3), dist, min_safe, warn_dist, interface_q
+      real(wp) :: d1, d2, d3, d4, d5, d6
+      real(wp) :: dur, tinit, mxx, myy, mzz, mxy, mxz, myz
+      integer :: b
+      logical :: in_any_block
+      character(64) :: stype
+      character(256) :: buf
+      character(512) :: msg
+
+      rewind(unit)
+      do
+         read(unit, '(a)', iostat=ios) buf
+         if (ios /= 0) return
+         if (trim(adjustl(buf)) == begin_marker) exit
+      end do
+
+      row = 0
+      do
+         read(unit, '(a)', iostat=ios) buf
+         if (ios /= 0 .or. trim(adjustl(buf)) == end_marker) exit
+         row = row + 1
+
+         ! Parse all 13 fields: type dur t0 mXX mYY mZZ mXY mXZ mYZ x y z alpha
+         read(buf, *, iostat=ios) stype, dur, tinit, &
+              mxx, myy, mzz, mxy, mxz, myz, x, y, z, ialpha
+         if (ios /= 0) then
+            write(msg, '(A,I0,A,A)') 'Source row ', row, &
+                 ' in '//trim(list_name)//' cannot be parsed. Row: ', trim(buf)
+            call issues%add(DIAG_ERROR, 'CFG-MT-004', trim(msg), &
+                 section=trim(list_name))
+            cycle
+         end if
+
+         in_any_block = .false.
+         do b = 1, nblocks
+            ! Check if source is within this block's domain
+            if (x < btp(b)%aqrs(1) .or. x > btp(b)%bqrs(1)) cycle
+            if (y < btp(b)%aqrs(2) .or. y > btp(b)%bqrs(2)) cycle
+            if (z < btp(b)%aqrs(3) .or. z > btp(b)%bqrs(3)) cycle
+            in_any_block = .true.
+
+            ! Grid spacing for this block
+            h(1) = (btp(b)%bqrs(1) - btp(b)%aqrs(1)) / max(btp(b)%nqrs(1) - 1, 1)
+            h(2) = (btp(b)%bqrs(2) - btp(b)%aqrs(2)) / max(btp(b)%nqrs(2) - 1, 1)
+            h(3) = (btp(b)%bqrs(3) - btp(b)%aqrs(3)) / max(btp(b)%nqrs(3) - 1, 1)
+
+            if (mollify_source) then
+               min_safe = 6.0_wp * maxval(h)
+            else
+               min_safe = real(order, wp) * maxval(h)
+            end if
+            warn_dist = 2.0_wp * min_safe
+
+            ! Distance to each of the 6 block faces
+            d1 = x - btp(b)%aqrs(1)  ! left q
+            d2 = btp(b)%bqrs(1) - x  ! right q
+            d3 = y - btp(b)%aqrs(2)  ! left r
+            d4 = btp(b)%bqrs(2) - y  ! right r
+            d5 = z - btp(b)%aqrs(3)  ! left s
+            d6 = btp(b)%bqrs(3) - z  ! right s
+            dist = min(d1, d2, d3, d4, d5, d6)
+
+            if (dist < min_safe) then
+               write(msg, '(A,I0,A,I0,A,3ES12.4,A,ES12.4,A,ES12.4)') &
+                    'Source ', row, ' in '//trim(list_name)//' block ', b, &
+                    ' at (', x, y, z, ') is ', dist, &
+                    ' from boundary, less than stencil half-width ', min_safe
+               call issues%add(DIAG_ERROR, 'CFG-MT-002', trim(msg), &
+                    section=trim(list_name), &
+                    suggestion='Move source at least order*h from all block faces.')
+            else if (dist < warn_dist) then
+               write(msg, '(A,I0,A,I0,A,3ES12.4,A,ES12.4,A,ES12.4)') &
+                    'Source ', row, ' in '//trim(list_name)//' block ', b, &
+                    ' at (', x, y, z, ') is ', dist, &
+                    ' from boundary, less than 2x stencil width ', warn_dist
+               call issues%add(DIAG_WARNING, 'CFG-MT-002', trim(msg), &
+                    section=trim(list_name), &
+                    suggestion='Consider moving source further from block faces for better accuracy.')
+            end if
+         end do
+
+         ! Check interface distance for 2-block setups
+         if (nblocks == 2) then
+            interface_q = btp(1)%bqrs(1)
+            h(1) = min( &
+                 (btp(1)%bqrs(1) - btp(1)%aqrs(1)) / max(btp(1)%nqrs(1) - 1, 1), &
+                 (btp(2)%bqrs(1) - btp(2)%aqrs(1)) / max(btp(2)%nqrs(1) - 1, 1))
+            if (mollify_source) then
+               min_safe = 6.0_wp * h(1)
+            else
+               min_safe = real(order, wp) * h(1)
+            end if
+            warn_dist = 2.0_wp * min_safe
+            dist = abs(x - interface_q)
+
+            if (dist < min_safe) then
+               write(msg, '(A,I0,A,A,ES12.4,A,ES12.4)') &
+                    'Source ', row, ' in '//trim(list_name), &
+                    ' is ', dist, ' from block interface, less than stencil half-width ', min_safe
+               call issues%add(DIAG_ERROR, 'CFG-MT-003', trim(msg), &
+                    section=trim(list_name), &
+                    suggestion='Move source at least order*h from the inter-block interface.')
+            else if (dist < warn_dist) then
+               write(msg, '(A,I0,A,A,ES12.4,A,ES12.4)') &
+                    'Source ', row, ' in '//trim(list_name), &
+                    ' is ', dist, ' from block interface, less than 2x stencil width ', warn_dist
+               call issues%add(DIAG_WARNING, 'CFG-MT-003', trim(msg), &
+                    section=trim(list_name), &
+                    suggestion='Consider moving source further from the interface for better accuracy.')
+            end if
+         end if
+
+         ! For unified list: source must be in at least one block
+         if (trim(list_name) == 'tensor_list' .and. .not.in_any_block) then
+            write(msg, '(A,I0,A,3ES12.4,A)') &
+                 'Source ', row, ' at (', x, y, z, ') is outside all block domains.'
+            call issues%add(DIAG_ERROR, 'CFG-MT-004', trim(msg), &
+                 section=trim(list_name), &
+                 suggestion='Place source within a block''s physical domain (aqrs to bqrs).')
+         end if
+      end do
+    end subroutine validate_tensor_rows
+
+  end subroutine validate_moment_tensor_sources
+
 
 end module input_preflight

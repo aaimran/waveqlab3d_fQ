@@ -337,6 +337,24 @@ add_test(NAME fq8_rejects_full_withers
     -D EXPECTED_CODE=CFG-FQ8-001
     -P ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/run_expected_preflight_failure.cmake)
 
+add_test(NAME mt_source_too_close_to_boundary
+  COMMAND ${CMAKE_COMMAND}
+    -D MPIEXEC=${WQL3D_MPI_RUNNER}
+    -D NPROCS=1
+    -D EXE=$<TARGET_FILE:waveqlab3d>
+    -D INPUT=${CMAKE_CURRENT_SOURCE_DIR}/../inputfile/test_mt_too_close_boundary.in
+    -D EXPECTED_CODE=CFG-MT-002
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/run_expected_preflight_failure.cmake)
+
+add_test(NAME mt_conflicting_tensor_list_markers
+  COMMAND ${CMAKE_COMMAND}
+    -D MPIEXEC=${WQL3D_MPI_RUNNER}
+    -D NPROCS=1
+    -D EXE=$<TARGET_FILE:waveqlab3d>
+    -D INPUT=${CMAKE_CURRENT_SOURCE_DIR}/../inputfile/test_mt_conflicting_markers.in
+    -D EXPECTED_CODE=CFG-MT-001
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/run_expected_preflight_failure.cmake)
+
 add_test(NAME q8_asymmetric_three_ranks
   COMMAND ${WQL3D_MPI_RUNNER} ${MPIEXEC_NUMPROC_FLAG} 3
     $<TARGET_FILE:waveqlab3d>
