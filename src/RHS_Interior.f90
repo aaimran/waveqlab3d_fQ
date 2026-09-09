@@ -3611,8 +3611,8 @@ if (F%order .eq. 7) then
           tr = Ux(1) + Uy(2) + Uz(3)
           mu2 = 2.0_wp * M%M(x,y,z,2)
           do i = 1, n
-             sm = M%weight_s_ve(i) * M%Qs_inv_ve(x,y,z)
-             pm = M%weight_p_ve(i) * M%Qp_inv_ve(x,y,z)
+             sm = M%weight_s_ve(i)
+             pm = M%weight_p_ve(i)
              bulk = (M%M(x,y,z,1) + mu2) * pm - mu2 * sm
              M%Deta4_ve(x,y,z,i) = M%Deta4_ve(x,y,z,i) + (mu2*sm*Ux(1) + bulk*tr - M%eta4_ve(x,y,z,i)) / M%tau_ve(i)
              M%Deta5_ve(x,y,z,i) = M%Deta5_ve(x,y,z,i) + (mu2*sm*Uy(2) + bulk*tr - M%eta5_ve(x,y,z,i)) / M%tau_ve(i)
@@ -3668,8 +3668,8 @@ if (F%order .eq. 7) then
           DU(9) = DU(9) - sum(M%eta9_ve(x,y,z,1:n))
           mu2 = 2.0_wp * M%M(x,y,z,2)
           do i = 1, n
-             sm = M%weight_s_ve(i) * M%Qs_inv_ve(x,y,z)
-             pm = M%weight_p_ve(i) * M%Qp_inv_ve(x,y,z)
+             sm = M%weight_s_ve(i)
+             pm = M%weight_p_ve(i)
              bulk = (M%M(x,y,z,1) + mu2) * pm - mu2 * sm
              M%Deta4_ve(x,y,z,i) = M%Deta4_ve(x,y,z,i) + (mu2*sm*exx + bulk*tr - M%eta4_ve(x,y,z,i)) / M%tau_ve(i)
              M%Deta5_ve(x,y,z,i) = M%Deta5_ve(x,y,z,i) + (mu2*sm*eyy + bulk*tr - M%eta5_ve(x,y,z,i)) / M%tau_ve(i)

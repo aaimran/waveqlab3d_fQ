@@ -80,8 +80,8 @@ contains
             call error('mu and density must be positive for viscoelastic', 'init_viscoelastic_properties')
        val_s = 0.0_wp; val_p = 0.0_wp
        do l = 1, n
-          val_s = val_s + M%weight_s_ve(l) / ((wref*wref*M%tau_ve(l)**2 + 1.0_wp) * params%Qs0(block_id))
-          val_p = val_p + M%weight_p_ve(l) / ((wref*wref*M%tau_ve(l)**2 + 1.0_wp) * params%Qp0(block_id))
+          val_s = val_s + M%weight_s_ve(l) / (wref*wref*M%tau_ve(l)**2 + 1.0_wp)
+          val_p = val_p + M%weight_p_ve(l) / (wref*wref*M%tau_ve(l)**2 + 1.0_wp)
        end do
        if (val_s >= 1.0_wp .or. val_p >= 1.0_wp) &
             call error('invalid viscoelastic modulus correction', 'init_viscoelastic_properties')

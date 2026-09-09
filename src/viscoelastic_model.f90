@@ -307,17 +307,11 @@ contains
   end subroutine build_nnls
 
   subroutine build_withers_table(qs, qp, gamma, f_transition, coeffs)
-    use withers_tables, only : get_relaxation_times, get_withers_weights
     real(wp), intent(in) :: qs, qp, gamma, f_transition
     type(viscoelastic_coefficients), intent(inout) :: coeffs
-    real(wp) :: tau8(8), ws8(8), wp8(8)
-
-    call get_relaxation_times(gamma, tau8)
-    coeffs%tau(1:8) = tau8 / f_transition
-    call get_withers_weights(gamma, qs, ws8)
-    coeffs%w_s(1:8) = ws8
-    call get_withers_weights(gamma, qp, wp8)
-    coeffs%w_p(1:8) = wp8
+    call withers_tau(8, gamma, f_transition, coeffs%tau)
+    call nnls_fit_weights(8, qs, gamma, f_transition, coeffs%tau, 256, 1.0e-10_wp, coeffs%w_s)
+    call nnls_fit_weights(8, qp, gamma, f_transition, coeffs%tau, 256, 1.0e-10_wp, coeffs%w_p)
   end subroutine build_withers_table
 
   subroutine build_withers_method(n, qs, qp, gamma, f_transition, fmin, fmax, nfreq, tol, coeffs)

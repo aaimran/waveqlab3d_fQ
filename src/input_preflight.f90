@@ -813,6 +813,8 @@ contains
     if (config%has_cq) call broadcast_cq(config)
     call MPI_Bcast(config%has_fq8, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
     if (config%has_fq8) call broadcast_fq8(config)
+    call MPI_Bcast(config%has_ve, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
+    if (config%has_ve) call broadcast_ve(config)
   end subroutine broadcast_config
 
 
@@ -905,6 +907,26 @@ contains
     call MPI_Bcast(config%fq8%f_transition, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
     call MPI_Bcast(config%fq8%fref, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
   end subroutine broadcast_fq8
+
+  subroutine broadcast_ve(config)
+    type(simulation_config_t), intent(inout) :: config
+    integer :: ierr
+    call bcast_chars(config%ve%attenuation)
+    call bcast_chars(config%ve%weight_method)
+    call MPI_Bcast(config%ve%Qs0, 2, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%Qp0, 2, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%gamma, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%fmin, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%fmax, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%fref, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%f_transition, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%n_mechanisms, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%nnls_samples, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%nnls_tolerance, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%max_fit_error, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%nblocks, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Bcast(config%ve%has_ve, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
+  end subroutine broadcast_ve
 
 
   subroutine bcast_chars(value)
