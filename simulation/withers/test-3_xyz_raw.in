@@ -1,7 +1,7 @@
-! waveqlab3d input file: test problem for mms on cartesian grid with friction
+! waveqlab3d input file: Withers frequency-dependent Q benchmark (gamma=0.6)
 
 &problem_list
- name = 'test-1_xyz_raw',
+ name = 'test-3_xyz_raw',
  problem = 'TPV5',
  nblocks = 2,
  t_final =  06.0d0,
@@ -11,7 +11,7 @@
  material_source='hardcode',
  fd_type = 'traditional',
  order = 6,
- response = 'elastic',
+ response = 'viscoelastic',
  w_stride = 1,
  w_fault = F /
 
@@ -24,7 +24,7 @@ btp(1)%lqrs = 1, 2, 1,
 btp(1)%rqrs = 0, 1, 1,
 btp(1)%pml_lqrs = T, F, T,
 btp(1)%pml_rqrs = F, T, T,
-btp(1)%npml = 21, 
+btp(1)%npml = 21,
 
 btp(2)%nqrs =  101,   51,  201,
 btp(2)%aqrs =  5d0,  0d0, -5d0,
@@ -34,14 +34,27 @@ btp(2)%lqrs = 0, 2, 1,
 btp(2)%rqrs = 1, 1, 1,
 btp(2)%pml_lqrs = F, F, T,
 btp(2)%pml_rqrs = T, T, T,
-btp(2)%npml = 21/ 
+btp(2)%npml = 21/
+
+&viscoelastic_list
+ attenuation = 'frequency-Q',
+ Qs0 = 50d0, 50d0,
+ Qp0 = 100d0, 100d0,
+ gamma = 0.6d0,
+ fmin = 0.05d0,
+ fmax = 20.0d0,
+ fref = 1.0d0,
+ f_transition = 1.0d0,
+ n_mechanisms = 8,
+ weight_method = 'withers-table',
+ max_fit_error = 0.10d0 /
 
 &moment_list
  use_moment_tensor = T,
  order = 4 /
 
 !---begin:tensor_list---
-'Cos-Bell' 0d0 0.2d0 0d0 0d0 0d0 0d0 -10d0 0d0 0d0 1.8d0 0d0 0 
+'Cos-Bell' 0d0 0.2d0 0d0 0d0 0d0 0d0 -10d0 0d0 0d0 1.8d0 0d0 0
 !---end:tensor_list---
 
 &mms_list
