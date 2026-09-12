@@ -1,7 +1,8 @@
 module anelastic_fq8_model
 
   use common, only : wp
-  use withers_tables, only : get_relaxation_times, get_withers_weights
+  use withers_tables, only : get_relaxation_times, get_withers_weights, &
+       get_withers_weights_high_q_only
   use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
   implicit none
   private
@@ -117,8 +118,13 @@ contains
        call fit_conventional_strengths(parameters%Qp0,parameters%gamma, &
             parameters%f_transition,tau,strength_p)
     else
-       call get_withers_weights(parameters%gamma,parameters%Qs0,strength_s)
-       call get_withers_weights(parameters%gamma,parameters%Qp0,strength_p)
+       if (parameters%coarse_grain == 0) then
+          call get_withers_weights_high_q_only(parameters%gamma,parameters%Qs0,strength_s)
+          call get_withers_weights_high_q_only(parameters%gamma,parameters%Qp0,strength_p)
+       else
+          call get_withers_weights(parameters%gamma,parameters%Qs0,strength_s)
+          call get_withers_weights(parameters%gamma,parameters%Qp0,strength_p)
+       end if
        ! Published weights are w_k=N*lambda_k and are used directly with one
        ! mechanism per node in the deterministic period-two coarse layout.
        if (parameters%weight_policy == 'nonnegative-refit') then

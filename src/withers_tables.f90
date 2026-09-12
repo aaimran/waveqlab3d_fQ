@@ -9,7 +9,7 @@ module withers_tables
    private
    
    ! Public interfaces
-   public :: get_withers_weights, get_relaxation_times
+   public :: get_withers_weights, get_withers_weights_high_q_only, get_relaxation_times
    public :: interpolate_gamma, N_GAMMA, N_MECH
    public :: get_withers_weights_Qf, get_relaxation_times_Qf
    
@@ -197,8 +197,18 @@ contains
       end if
       
    end subroutine get_withers_weights
-   
-   
+
+
+   subroutine get_withers_weights_high_q_only(gamma, Q, weights)
+      real(kind=wp), intent(in) :: gamma, Q
+      real(kind=wp), dimension(N_MECH), intent(out) :: weights
+      integer :: idx_low, idx_high
+      real(kind=wp) :: alpha
+      call find_gamma_indices(gamma, idx_low, idx_high, alpha)
+      call compute_high_q_weights(idx_low, idx_high, alpha, Q, weights)
+   end subroutine get_withers_weights_high_q_only
+
+
    !> @brief Find gamma indices and interpolation weight
    !> @param[in] gamma Target gamma value
    !> @param[out] idx_low Lower index in GAMMA_VALUES
